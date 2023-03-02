@@ -1,0 +1,877 @@
+-- +--------------------------------------------------------+
+-- |                                                        |
+-- | Test bench realizzato da Riccardo Motta e Matteo Negro |
+-- |                                                        |
+-- +--------------------------------------------------------+
+
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use ieee.std_logic_unsigned.all;
+
+entity project_tb is
+end project_tb;
+
+architecture projecttb of project_tb is
+
+    -- Signals declartion
+    constant c_CLOCK_PERIOD : time := 100 ns;                                    -- ClockPeriod 
+    signal   tb_done        : std_logic;                                         -- Done
+    signal   ram_address    : std_logic_vector (15 downto 0) := (others => '0'); -- RamAddress
+    signal   tb_rst         : std_logic := '0';                                  -- Reset
+    signal   tb_start       : std_logic := '0';                                  -- Start
+    signal   tb_clk         : std_logic := '0';                                  -- Clock
+    signal   ram_i_data     : std_logic_vector (7 downto 0);                     -- RamInputData
+    signal   ram_o_data     : std_logic_vector (7 downto 0);                     -- RamOutputData
+    signal   enable_wire    : std_logic;                                         -- EnableWire
+    signal   ram_we         : std_logic;                                         -- RamEnableWrite
+
+    -- Ram declaration
+    type ram_type is array (65535 downto 0) of std_logic_vector(7 downto 0);
+
+    -- Ram instance
+    signal RAM: ram_type := (000      => std_logic_vector(to_unsigned(255, 8)),
+                             001      => "01010010",
+                             002      => "11101000",
+                             003      => "00110000",
+                             004      => "00101011",
+                             005      => "01100101",
+                             006      => "00111011",
+                             007      => "10111100",
+                             008      => "10000111",
+                             009      => "00001100",
+                             010      => "10100011",
+                             011      => "11100011",
+                             012      => "11110111",
+                             013      => "10010101",
+                             014      => "00011111",
+                             015      => "10000000",
+                             016      => "10011110",
+                             017      => "10100011",
+                             018      => "11111101",
+                             019      => "10010101",
+                             020      => "00101010",
+                             021      => "11111100",
+                             022      => "01000110",
+                             023      => "00100001",
+                             024      => "10010101",
+                             025      => "10011111",
+                             026      => "01010011",
+                             027      => "01111010",
+                             028      => "11100000",
+                             029      => "01100110",
+                             030      => "10101001",
+                             031      => "11110001",
+                             032      => "11100011",
+                             033      => "11110100",
+                             034      => "01001000",
+                             035      => "00100010",
+                             036      => "10000011",
+                             037      => "11000110",
+                             038      => "10100010",
+                             039      => "10000100",
+                             040      => "10100101",
+                             041      => "10101000",
+                             042      => "11011101",
+                             043      => "00111001",
+                             044      => "10001001",
+                             045      => "01011101",
+                             046      => "00001010",
+                             047      => "00000011",
+                             048      => "00011100",
+                             049      => "00111000",
+                             050      => "00111010",
+                             051      => "01001000",
+                             052      => "00010101",
+                             053      => "01111000",
+                             054      => "01111000",
+                             055      => "10101001",
+                             056      => "10010010",
+                             057      => "11010000",
+                             058      => "01011011",
+                             059      => "10111110",
+                             060      => "00011111",
+                             061      => "00010101",
+                             062      => "10101110",
+                             063      => "00101001",
+                             064      => "00110011",
+                             065      => "11110011",
+                             066      => "10101100",
+                             067      => "00111001",
+                             068      => "00000100",
+                             069      => "00000110",
+                             070      => "00011111",
+                             071      => "01110110",
+                             072      => "11101000",
+                             073      => "10001000",
+                             074      => "11000001",
+                             075      => "00010011",
+                             076      => "11100000",
+                             077      => "00011101",
+                             078      => "11100101",
+                             079      => "11110010",
+                             080      => "11100101",
+                             081      => "01000011",
+                             082      => "10100100",
+                             083      => "01010100",
+                             084      => "10011110",
+                             085      => "10101010",
+                             086      => "00111011",
+                             087      => "01110000",
+                             088      => "01000110",
+                             089      => "01101111",
+                             090      => "01000001",
+                             091      => "00000101",
+                             092      => "10100001",
+                             093      => "01110110",
+                             094      => "00100011",
+                             095      => "01110001",
+                             096      => "10001111",
+                             097      => "11111101",
+                             098      => "10001101",
+                             099      => "11111111",
+                             100      => "11110101",
+                             101      => "11011111",
+                             102      => "01000010",
+                             103      => "01000010",
+                             104      => "00111010",
+                             105      => "10110100",
+                             106      => "10001001",
+                             107      => "11011110",
+                             108      => "01100110",
+                             109      => "01100111",
+                             110      => "01101100",
+                             111      => "00111011",
+                             112      => "10000001",
+                             113      => "01100011",
+                             114      => "10110010",
+                             115      => "00100001",
+                             116      => "01101000",
+                             117      => "00110010",
+                             118      => "11001100",
+                             119      => "11001010",
+                             120      => "00010000",
+                             121      => "01111001",
+                             122      => "10100001",
+                             123      => "00001001",
+                             124      => "10000000",
+                             125      => "01111000",
+                             126      => "10010101",
+                             127      => "11010111",
+                             128      => "10101110",
+                             129      => "00101010",
+                             130      => "00101111",
+                             131      => "11101110",
+                             132      => "01110001",
+                             133      => "11000000",
+                             134      => "10100111",
+                             135      => "00011010",
+                             136      => "00001011",
+                             137      => "01110101",
+                             138      => "11001111",
+                             139      => "00011001",
+                             140      => "01100111",
+                             141      => "10000111",
+                             142      => "11100101",
+                             143      => "11011011",
+                             144      => "10011110",
+                             145      => "10011010",
+                             146      => "11101011",
+                             147      => "00100111",
+                             148      => "11011001",
+                             149      => "11000000",
+                             150      => "10011110",
+                             151      => "01010110",
+                             152      => "10000110",
+                             153      => "01000111",
+                             154      => "01111010",
+                             155      => "00011000",
+                             156      => "10011011",
+                             157      => "10101100",
+                             158      => "00000011",
+                             159      => "01110101",
+                             160      => "01010001",
+                             161      => "11111000",
+                             162      => "10000100",
+                             163      => "01011011",
+                             164      => "10001001",
+                             165      => "10111101",
+                             166      => "10000110",
+                             167      => "10101011",
+                             168      => "00011010",
+                             169      => "01111011",
+                             170      => "11110010",
+                             171      => "00111100",
+                             172      => "00000101",
+                             173      => "11101111",
+                             174      => "00010010",
+                             175      => "01111001",
+                             176      => "10010001",
+                             177      => "10001000",
+                             178      => "01001111",
+                             179      => "00010010",
+                             180      => "01010000",
+                             181      => "10001010",
+                             182      => "11010111",
+                             183      => "00010001",
+                             184      => "11001000",
+                             185      => "00001100",
+                             186      => "00001010",
+                             187      => "10010110",
+                             188      => "01110010",
+                             189      => "11101101",
+                             190      => "11100111",
+                             191      => "11100100",
+                             192      => "10101100",
+                             193      => "00001111",
+                             194      => "10000010",
+                             195      => "11111001",
+                             196      => "11001100",
+                             197      => "00010101",
+                             198      => "11110010",
+                             199      => "00101010",
+                             200      => "01000101",
+                             201      => "10101111",
+                             202      => "10011010",
+                             203      => "10010110",
+                             204      => "01111100",
+                             205      => "10101101",
+                             206      => "11011011",
+                             207      => "11110100",
+                             208      => "11000000",
+                             209      => "01000011",
+                             210      => "01011100",
+                             211      => "00110100",
+                             212      => "00010010",
+                             213      => "10000101",
+                             214      => "11110100",
+                             215      => "00111011",
+                             216      => "11010001",
+                             217      => "10100011",
+                             218      => "01111110",
+                             219      => "11011101",
+                             220      => "01010101",
+                             221      => "10100111",
+                             222      => "01111000",
+                             223      => "11101001",
+                             224      => "00110011",
+                             225      => "11101011",
+                             226      => "10010010",
+                             227      => "11100101",
+                             228      => "00010111",
+                             229      => "00001101",
+                             230      => "01110011",
+                             231      => "11011010",
+                             232      => "10101110",
+                             233      => "00100100",
+                             234      => "00111010",
+                             235      => "11011110",
+                             236      => "10000011",
+                             237      => "00001101",
+                             238      => "10001010",
+                             239      => "10011101",
+                             240      => "11000000",
+                             241      => "01111011",
+                             242      => "10111000",
+                             243      => "00100000",
+                             244      => "11110001",
+                             245      => "01000001",
+                             246      => "11011001",
+                             247      => "00001001",
+                             248      => "01100101",
+                             249      => "11101000",
+                             250      => "01111000",
+                             251      => "11000010",
+                             252      => "00100011",
+                             253      => "11011111",
+                             254      => "01100111",
+                             255      => "11100000",
+                             others   => (others =>'0'));
+    
+    -- Project Interface Component 
+    component project_reti_logiche is
+    port (
+        i_clk     : in  std_logic;
+        i_start   : in  std_logic;
+        i_rst     : in  std_logic;
+        i_data    : in  std_logic_vector(7 downto 0);
+        o_address : out std_logic_vector(15 downto 0);
+        o_done    : out std_logic;
+        o_en      : out std_logic;
+        o_we      : out std_logic;
+        o_data    : out std_logic_vector (7 downto 0)
+    );
+    end component project_reti_logiche;
+
+    begin
+    UUT: project_reti_logiche
+    port map (
+        i_clk     => tb_clk,
+        i_start   => tb_start,
+        i_rst     => tb_rst,
+        i_data    => ram_o_data,
+        o_address => ram_address,
+        o_done    => tb_done,
+        o_en   	  => enable_wire,
+        o_we      => ram_we,
+        o_data    => ram_i_data
+    );
+
+    -- Generation Clock Process
+    p_CLK_GEN : process is
+    begin
+        wait for c_CLOCK_PERIOD/2;
+        tb_clk <= not tb_clk;
+    end process p_CLK_GEN;
+
+    -- Ram processing 
+    RAM_process : process(tb_clk)
+    begin
+        if tb_clk'event and tb_clk = '1' then
+            if enable_wire = '1' then
+                if ram_we = '1' then
+                    RAM(conv_integer(ram_address)) <= ram_i_data;
+                    ram_o_data                     <= ram_i_data after 2 ns;
+                else
+                    ram_o_data                     <= RAM(conv_integer(ram_address)) after 2 ns;
+                end if;
+            end if;
+        end if;
+    end process;
+
+    test : process is
+    begin 
+        wait for 100 ns;
+
+        wait for c_CLOCK_PERIOD;
+        tb_rst <= '1';
+
+        wait for c_CLOCK_PERIOD;
+        tb_rst <= '0';
+
+        wait for c_CLOCK_PERIOD;
+        tb_start <= '1';
+
+        wait for c_CLOCK_PERIOD;
+        wait until tb_done = '1';
+
+        wait for c_CLOCK_PERIOD;
+        tb_start <= '0';
+
+        wait until tb_done = '0';
+
+        -- Checking behaviour:
+        assert RAM(1000) = "00110100" report "UNSUCCESSFUL TEST: # 000 byte in RAM -> add: 1000; right value: 00110100; found value: " & integer'image(to_integer(unsigned(RAM(1000)))) severity failure;
+        assert RAM(1001) = "01111101" report "UNSUCCESSFUL TEST: # 001 byte in RAM -> add: 1001; right value: 01111101; found value: " & integer'image(to_integer(unsigned(RAM(1001)))) severity failure;
+        assert RAM(1002) = "00100110" report "UNSUCCESSFUL TEST: # 002 byte in RAM -> add: 1002; right value: 00100110; found value: " & integer'image(to_integer(unsigned(RAM(1002)))) severity failure;
+        assert RAM(1003) = "00011100" report "UNSUCCESSFUL TEST: # 003 byte in RAM -> add: 1003; right value: 00011100; found value: " & integer'image(to_integer(unsigned(RAM(1003)))) severity failure;
+        assert RAM(1004) = "00001110" report "UNSUCCESSFUL TEST: # 004 byte in RAM -> add: 1004; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1004)))) severity failure;
+        assert RAM(1005) = "10110000" report "UNSUCCESSFUL TEST: # 005 byte in RAM -> add: 1005; right value: 10110000; found value: " & integer'image(to_integer(unsigned(RAM(1005)))) severity failure;
+        assert RAM(1006) = "00001101" report "UNSUCCESSFUL TEST: # 006 byte in RAM -> add: 1006; right value: 00001101; found value: " & integer'image(to_integer(unsigned(RAM(1006)))) severity failure;
+        assert RAM(1007) = "00010010" report "UNSUCCESSFUL TEST: # 007 byte in RAM -> add: 1007; right value: 00010010; found value: " & integer'image(to_integer(unsigned(RAM(1007)))) severity failure;
+        assert RAM(1008) = "10001010" report "UNSUCCESSFUL TEST: # 008 byte in RAM -> add: 1008; right value: 10001010; found value: " & integer'image(to_integer(unsigned(RAM(1008)))) severity failure;
+        assert RAM(1009) = "11110100" report "UNSUCCESSFUL TEST: # 009 byte in RAM -> add: 1009; right value: 11110100; found value: " & integer'image(to_integer(unsigned(RAM(1009)))) severity failure;
+        assert RAM(1010) = "01111110" report "UNSUCCESSFUL TEST: # 010 byte in RAM -> add: 1010; right value: 01111110; found value: " & integer'image(to_integer(unsigned(RAM(1010)))) severity failure;
+        assert RAM(1011) = "01100010" report "UNSUCCESSFUL TEST: # 011 byte in RAM -> add: 1011; right value: 01100010; found value: " & integer'image(to_integer(unsigned(RAM(1011)))) severity failure;
+        assert RAM(1012) = "01100010" report "UNSUCCESSFUL TEST: # 012 byte in RAM -> add: 1012; right value: 01100010; found value: " & integer'image(to_integer(unsigned(RAM(1012)))) severity failure;
+        assert RAM(1013) = "01011011" report "UNSUCCESSFUL TEST: # 013 byte in RAM -> add: 1013; right value: 01011011; found value: " & integer'image(to_integer(unsigned(RAM(1013)))) severity failure;
+        assert RAM(1014) = "11011100" report "UNSUCCESSFUL TEST: # 014 byte in RAM -> add: 1014; right value: 11011100; found value: " & integer'image(to_integer(unsigned(RAM(1014)))) severity failure;
+        assert RAM(1015) = "00111001" report "UNSUCCESSFUL TEST: # 015 byte in RAM -> add: 1015; right value: 00111001; found value: " & integer'image(to_integer(unsigned(RAM(1015)))) severity failure;
+        assert RAM(1016) = "10110000" report "UNSUCCESSFUL TEST: # 016 byte in RAM -> add: 1016; right value: 10110000; found value: " & integer'image(to_integer(unsigned(RAM(1016)))) severity failure;
+        assert RAM(1017) = "11101011" report "UNSUCCESSFUL TEST: # 017 byte in RAM -> add: 1017; right value: 11101011; found value: " & integer'image(to_integer(unsigned(RAM(1017)))) severity failure;
+        assert RAM(1018) = "11010001" report "UNSUCCESSFUL TEST: # 018 byte in RAM -> add: 1018; right value: 11010001; found value: " & integer'image(to_integer(unsigned(RAM(1018)))) severity failure;
+        assert RAM(1019) = "11001110" report "UNSUCCESSFUL TEST: # 019 byte in RAM -> add: 1019; right value: 11001110; found value: " & integer'image(to_integer(unsigned(RAM(1019)))) severity failure;
+        assert RAM(1020) = "01010110" report "UNSUCCESSFUL TEST: # 020 byte in RAM -> add: 1020; right value: 01010110; found value: " & integer'image(to_integer(unsigned(RAM(1020)))) severity failure;
+        assert RAM(1021) = "11001110" report "UNSUCCESSFUL TEST: # 021 byte in RAM -> add: 1021; right value: 11001110; found value: " & integer'image(to_integer(unsigned(RAM(1021)))) severity failure;
+        assert RAM(1022) = "01010101" report "UNSUCCESSFUL TEST: # 022 byte in RAM -> add: 1022; right value: 01010101; found value: " & integer'image(to_integer(unsigned(RAM(1022)))) severity failure;
+        assert RAM(1023) = "10001001" report "UNSUCCESSFUL TEST: # 023 byte in RAM -> add: 1023; right value: 10001001; found value: " & integer'image(to_integer(unsigned(RAM(1023)))) severity failure;
+        assert RAM(1024) = "01101111" report "UNSUCCESSFUL TEST: # 024 byte in RAM -> add: 1024; right value: 01101111; found value: " & integer'image(to_integer(unsigned(RAM(1024)))) severity failure;
+        assert RAM(1025) = "01000100" report "UNSUCCESSFUL TEST: # 025 byte in RAM -> add: 1025; right value: 01000100; found value: " & integer'image(to_integer(unsigned(RAM(1025)))) severity failure;
+        assert RAM(1026) = "01110011" report "UNSUCCESSFUL TEST: # 026 byte in RAM -> add: 1026; right value: 01110011; found value: " & integer'image(to_integer(unsigned(RAM(1026)))) severity failure;
+        assert RAM(1027) = "10010101" report "UNSUCCESSFUL TEST: # 027 byte in RAM -> add: 1027; right value: 10010101; found value: " & integer'image(to_integer(unsigned(RAM(1027)))) severity failure;
+        assert RAM(1028) = "01101100" report "UNSUCCESSFUL TEST: # 028 byte in RAM -> add: 1028; right value: 01101100; found value: " & integer'image(to_integer(unsigned(RAM(1028)))) severity failure;
+        assert RAM(1029) = "00000000" report "UNSUCCESSFUL TEST: # 029 byte in RAM -> add: 1029; right value: 00000000; found value: " & integer'image(to_integer(unsigned(RAM(1029)))) severity failure;
+        assert RAM(1030) = "11011111" report "UNSUCCESSFUL TEST: # 030 byte in RAM -> add: 1030; right value: 11011111; found value: " & integer'image(to_integer(unsigned(RAM(1030)))) severity failure;
+        assert RAM(1031) = "10010110" report "UNSUCCESSFUL TEST: # 031 byte in RAM -> add: 1031; right value: 10010110; found value: " & integer'image(to_integer(unsigned(RAM(1031)))) severity failure;
+        assert RAM(1032) = "00010001" report "UNSUCCESSFUL TEST: # 032 byte in RAM -> add: 1032; right value: 00010001; found value: " & integer'image(to_integer(unsigned(RAM(1032)))) severity failure;
+        assert RAM(1033) = "11001110" report "UNSUCCESSFUL TEST: # 033 byte in RAM -> add: 1033; right value: 11001110; found value: " & integer'image(to_integer(unsigned(RAM(1033)))) severity failure;
+        assert RAM(1034) = "01010101" report "UNSUCCESSFUL TEST: # 034 byte in RAM -> add: 1034; right value: 01010101; found value: " & integer'image(to_integer(unsigned(RAM(1034)))) severity failure;
+        assert RAM(1035) = "01011000" report "UNSUCCESSFUL TEST: # 035 byte in RAM -> add: 1035; right value: 01011000; found value: " & integer'image(to_integer(unsigned(RAM(1035)))) severity failure;
+        assert RAM(1036) = "10101111" report "UNSUCCESSFUL TEST: # 036 byte in RAM -> add: 1036; right value: 10101111; found value: " & integer'image(to_integer(unsigned(RAM(1036)))) severity failure;
+        assert RAM(1037) = "01000100" report "UNSUCCESSFUL TEST: # 037 byte in RAM -> add: 1037; right value: 01000100; found value: " & integer'image(to_integer(unsigned(RAM(1037)))) severity failure;
+        assert RAM(1038) = "01111101" report "UNSUCCESSFUL TEST: # 038 byte in RAM -> add: 1038; right value: 01111101; found value: " & integer'image(to_integer(unsigned(RAM(1038)))) severity failure;
+        assert RAM(1039) = "00010001" report "UNSUCCESSFUL TEST: # 039 byte in RAM -> add: 1039; right value: 00010001; found value: " & integer'image(to_integer(unsigned(RAM(1039)))) severity failure;
+        assert RAM(1040) = "00100101" report "UNSUCCESSFUL TEST: # 040 byte in RAM -> add: 1040; right value: 00100101; found value: " & integer'image(to_integer(unsigned(RAM(1040)))) severity failure;
+        assert RAM(1041) = "01011011" report "UNSUCCESSFUL TEST: # 041 byte in RAM -> add: 1041; right value: 01011011; found value: " & integer'image(to_integer(unsigned(RAM(1041)))) severity failure;
+        assert RAM(1042) = "00110111" report "UNSUCCESSFUL TEST: # 042 byte in RAM -> add: 1042; right value: 00110111; found value: " & integer'image(to_integer(unsigned(RAM(1042)))) severity failure;
+        assert RAM(1043) = "00111010" report "UNSUCCESSFUL TEST: # 043 byte in RAM -> add: 1043; right value: 00111010; found value: " & integer'image(to_integer(unsigned(RAM(1043)))) severity failure;
+        assert RAM(1044) = "11001101" report "UNSUCCESSFUL TEST: # 044 byte in RAM -> add: 1044; right value: 11001101; found value: " & integer'image(to_integer(unsigned(RAM(1044)))) severity failure;
+        assert RAM(1045) = "11000011" report "UNSUCCESSFUL TEST: # 045 byte in RAM -> add: 1045; right value: 11000011; found value: " & integer'image(to_integer(unsigned(RAM(1045)))) severity failure;
+        assert RAM(1046) = "10101111" report "UNSUCCESSFUL TEST: # 046 byte in RAM -> add: 1046; right value: 10101111; found value: " & integer'image(to_integer(unsigned(RAM(1046)))) severity failure;
+        assert RAM(1047) = "01000100" report "UNSUCCESSFUL TEST: # 047 byte in RAM -> add: 1047; right value: 01000100; found value: " & integer'image(to_integer(unsigned(RAM(1047)))) severity failure;
+        assert RAM(1048) = "10101111" report "UNSUCCESSFUL TEST: # 048 byte in RAM -> add: 1048; right value: 10101111; found value: " & integer'image(to_integer(unsigned(RAM(1048)))) severity failure;
+        assert RAM(1049) = "10010101" report "UNSUCCESSFUL TEST: # 049 byte in RAM -> add: 1049; right value: 10010101; found value: " & integer'image(to_integer(unsigned(RAM(1049)))) severity failure;
+        assert RAM(1050) = "10000100" report "UNSUCCESSFUL TEST: # 050 byte in RAM -> add: 1050; right value: 10000100; found value: " & integer'image(to_integer(unsigned(RAM(1050)))) severity failure;
+        assert RAM(1051) = "01111110" report "UNSUCCESSFUL TEST: # 051 byte in RAM -> add: 1051; right value: 01111110; found value: " & integer'image(to_integer(unsigned(RAM(1051)))) severity failure;
+        assert RAM(1052) = "10001001" report "UNSUCCESSFUL TEST: # 052 byte in RAM -> add: 1052; right value: 10001001; found value: " & integer'image(to_integer(unsigned(RAM(1052)))) severity failure;
+        assert RAM(1053) = "01100001" report "UNSUCCESSFUL TEST: # 053 byte in RAM -> add: 1053; right value: 01100001; found value: " & integer'image(to_integer(unsigned(RAM(1053)))) severity failure;
+        assert RAM(1054) = "00100110" report "UNSUCCESSFUL TEST: # 054 byte in RAM -> add: 1054; right value: 00100110; found value: " & integer'image(to_integer(unsigned(RAM(1054)))) severity failure;
+        assert RAM(1055) = "11000000" report "UNSUCCESSFUL TEST: # 055 byte in RAM -> add: 1055; right value: 11000000; found value: " & integer'image(to_integer(unsigned(RAM(1055)))) severity failure;
+        assert RAM(1056) = "00111010" report "UNSUCCESSFUL TEST: # 056 byte in RAM -> add: 1056; right value: 00111010; found value: " & integer'image(to_integer(unsigned(RAM(1056)))) severity failure;
+        assert RAM(1057) = "11111010" report "UNSUCCESSFUL TEST: # 057 byte in RAM -> add: 1057; right value: 11111010; found value: " & integer'image(to_integer(unsigned(RAM(1057)))) severity failure;
+        assert RAM(1058) = "00010001" report "UNSUCCESSFUL TEST: # 058 byte in RAM -> add: 1058; right value: 00010001; found value: " & integer'image(to_integer(unsigned(RAM(1058)))) severity failure;
+        assert RAM(1059) = "00011111" report "UNSUCCESSFUL TEST: # 059 byte in RAM -> add: 1059; right value: 00011111; found value: " & integer'image(to_integer(unsigned(RAM(1059)))) severity failure;
+        assert RAM(1060) = "10010101" report "UNSUCCESSFUL TEST: # 060 byte in RAM -> add: 1060; right value: 10010101; found value: " & integer'image(to_integer(unsigned(RAM(1060)))) severity failure;
+        assert RAM(1061) = "10110011" report "UNSUCCESSFUL TEST: # 061 byte in RAM -> add: 1061; right value: 10110011; found value: " & integer'image(to_integer(unsigned(RAM(1061)))) severity failure;
+        assert RAM(1062) = "10010110" report "UNSUCCESSFUL TEST: # 062 byte in RAM -> add: 1062; right value: 10010110; found value: " & integer'image(to_integer(unsigned(RAM(1062)))) severity failure;
+        assert RAM(1063) = "11001110" report "UNSUCCESSFUL TEST: # 063 byte in RAM -> add: 1063; right value: 11001110; found value: " & integer'image(to_integer(unsigned(RAM(1063)))) severity failure;
+        assert RAM(1064) = "01010101" report "UNSUCCESSFUL TEST: # 064 byte in RAM -> add: 1064; right value: 01010101; found value: " & integer'image(to_integer(unsigned(RAM(1064)))) severity failure;
+        assert RAM(1065) = "10000111" report "UNSUCCESSFUL TEST: # 065 byte in RAM -> add: 1065; right value: 10000111; found value: " & integer'image(to_integer(unsigned(RAM(1065)))) severity failure;
+        assert RAM(1066) = "00110111" report "UNSUCCESSFUL TEST: # 066 byte in RAM -> add: 1066; right value: 00110111; found value: " & integer'image(to_integer(unsigned(RAM(1066)))) severity failure;
+        assert RAM(1067) = "11011100" report "UNSUCCESSFUL TEST: # 067 byte in RAM -> add: 1067; right value: 11011100; found value: " & integer'image(to_integer(unsigned(RAM(1067)))) severity failure;
+        assert RAM(1068) = "00001101" report "UNSUCCESSFUL TEST: # 068 byte in RAM -> add: 1068; right value: 00001101; found value: " & integer'image(to_integer(unsigned(RAM(1068)))) severity failure;
+        assert RAM(1069) = "11001101" report "UNSUCCESSFUL TEST: # 069 byte in RAM -> add: 1069; right value: 11001101; found value: " & integer'image(to_integer(unsigned(RAM(1069)))) severity failure;
+        assert RAM(1070) = "00011100" report "UNSUCCESSFUL TEST: # 070 byte in RAM -> add: 1070; right value: 00011100; found value: " & integer'image(to_integer(unsigned(RAM(1070)))) severity failure;
+        assert RAM(1071) = "00001110" report "UNSUCCESSFUL TEST: # 071 byte in RAM -> add: 1071; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1071)))) severity failure;
+        assert RAM(1072) = "01011011" report "UNSUCCESSFUL TEST: # 072 byte in RAM -> add: 1072; right value: 01011011; found value: " & integer'image(to_integer(unsigned(RAM(1072)))) severity failure;
+        assert RAM(1073) = "00111010" report "UNSUCCESSFUL TEST: # 073 byte in RAM -> add: 1073; right value: 00111010; found value: " & integer'image(to_integer(unsigned(RAM(1073)))) severity failure;
+        assert RAM(1074) = "00010001" report "UNSUCCESSFUL TEST: # 074 byte in RAM -> add: 1074; right value: 00010001; found value: " & integer'image(to_integer(unsigned(RAM(1074)))) severity failure;
+        assert RAM(1075) = "11001101" report "UNSUCCESSFUL TEST: # 075 byte in RAM -> add: 1075; right value: 11001101; found value: " & integer'image(to_integer(unsigned(RAM(1075)))) severity failure;
+        assert RAM(1076) = "00011100" report "UNSUCCESSFUL TEST: # 076 byte in RAM -> add: 1076; right value: 00011100; found value: " & integer'image(to_integer(unsigned(RAM(1076)))) severity failure;
+        assert RAM(1077) = "00110111" report "UNSUCCESSFUL TEST: # 077 byte in RAM -> add: 1077; right value: 00110111; found value: " & integer'image(to_integer(unsigned(RAM(1077)))) severity failure;
+        assert RAM(1078) = "11010001" report "UNSUCCESSFUL TEST: # 078 byte in RAM -> add: 1078; right value: 11010001; found value: " & integer'image(to_integer(unsigned(RAM(1078)))) severity failure;
+        assert RAM(1079) = "11110100" report "UNSUCCESSFUL TEST: # 079 byte in RAM -> add: 1079; right value: 11110100; found value: " & integer'image(to_integer(unsigned(RAM(1079)))) severity failure;
+        assert RAM(1080) = "10100001" report "UNSUCCESSFUL TEST: # 080 byte in RAM -> add: 1080; right value: 10100001; found value: " & integer'image(to_integer(unsigned(RAM(1080)))) severity failure;
+        assert RAM(1081) = "00011100" report "UNSUCCESSFUL TEST: # 081 byte in RAM -> add: 1081; right value: 00011100; found value: " & integer'image(to_integer(unsigned(RAM(1081)))) severity failure;
+        assert RAM(1082) = "11101000" report "UNSUCCESSFUL TEST: # 082 byte in RAM -> add: 1082; right value: 11101000; found value: " & integer'image(to_integer(unsigned(RAM(1082)))) severity failure;
+        assert RAM(1083) = "10011000" report "UNSUCCESSFUL TEST: # 083 byte in RAM -> add: 1083; right value: 10011000; found value: " & integer'image(to_integer(unsigned(RAM(1083)))) severity failure;
+        assert RAM(1084) = "01111110" report "UNSUCCESSFUL TEST: # 084 byte in RAM -> add: 1084; right value: 01111110; found value: " & integer'image(to_integer(unsigned(RAM(1084)))) severity failure;
+        assert RAM(1085) = "01101111" report "UNSUCCESSFUL TEST: # 085 byte in RAM -> add: 1085; right value: 01101111; found value: " & integer'image(to_integer(unsigned(RAM(1085)))) severity failure;
+        assert RAM(1086) = "10101100" report "UNSUCCESSFUL TEST: # 086 byte in RAM -> add: 1086; right value: 10101100; found value: " & integer'image(to_integer(unsigned(RAM(1086)))) severity failure;
+        assert RAM(1087) = "11011111" report "UNSUCCESSFUL TEST: # 087 byte in RAM -> add: 1087; right value: 11011111; found value: " & integer'image(to_integer(unsigned(RAM(1087)))) severity failure;
+        assert RAM(1088) = "01000100" report "UNSUCCESSFUL TEST: # 088 byte in RAM -> add: 1088; right value: 01000100; found value: " & integer'image(to_integer(unsigned(RAM(1088)))) severity failure;
+        assert RAM(1089) = "10011000" report "UNSUCCESSFUL TEST: # 089 byte in RAM -> add: 1089; right value: 10011000; found value: " & integer'image(to_integer(unsigned(RAM(1089)))) severity failure;
+        assert RAM(1090) = "01110000" report "UNSUCCESSFUL TEST: # 090 byte in RAM -> add: 1090; right value: 01110000; found value: " & integer'image(to_integer(unsigned(RAM(1090)))) severity failure;
+        assert RAM(1091) = "11010001" report "UNSUCCESSFUL TEST: # 091 byte in RAM -> add: 1091; right value: 11010001; found value: " & integer'image(to_integer(unsigned(RAM(1091)))) severity failure;
+        assert RAM(1092) = "11000000" report "UNSUCCESSFUL TEST: # 092 byte in RAM -> add: 1092; right value: 11000000; found value: " & integer'image(to_integer(unsigned(RAM(1092)))) severity failure;
+        assert RAM(1093) = "00001110" report "UNSUCCESSFUL TEST: # 093 byte in RAM -> add: 1093; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1093)))) severity failure;
+        assert RAM(1094) = "10110011" report "UNSUCCESSFUL TEST: # 094 byte in RAM -> add: 1094; right value: 10110011; found value: " & integer'image(to_integer(unsigned(RAM(1094)))) severity failure;
+        assert RAM(1095) = "10011011" report "UNSUCCESSFUL TEST: # 095 byte in RAM -> add: 1095; right value: 10011011; found value: " & integer'image(to_integer(unsigned(RAM(1095)))) severity failure;
+        assert RAM(1096) = "00001110" report "UNSUCCESSFUL TEST: # 096 byte in RAM -> add: 1096; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1096)))) severity failure;
+        assert RAM(1097) = "01101100" report "UNSUCCESSFUL TEST: # 097 byte in RAM -> add: 1097; right value: 01101100; found value: " & integer'image(to_integer(unsigned(RAM(1097)))) severity failure;
+        assert RAM(1098) = "00001110" report "UNSUCCESSFUL TEST: # 098 byte in RAM -> add: 1098; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1098)))) severity failure;
+        assert RAM(1099) = "01100001" report "UNSUCCESSFUL TEST: # 099 byte in RAM -> add: 1099; right value: 01100001; found value: " & integer'image(to_integer(unsigned(RAM(1099)))) severity failure;
+        assert RAM(1100) = "11110111" report "UNSUCCESSFUL TEST: # 100 byte in RAM -> add: 1100; right value: 11110111; found value: " & integer'image(to_integer(unsigned(RAM(1100)))) severity failure;
+        assert RAM(1101) = "11011100" report "UNSUCCESSFUL TEST: # 101 byte in RAM -> add: 1101; right value: 11011100; found value: " & integer'image(to_integer(unsigned(RAM(1101)))) severity failure;
+        assert RAM(1102) = "00000011" report "UNSUCCESSFUL TEST: # 102 byte in RAM -> add: 1102; right value: 00000011; found value: " & integer'image(to_integer(unsigned(RAM(1102)))) severity failure;
+        assert RAM(1103) = "01000100" report "UNSUCCESSFUL TEST: # 103 byte in RAM -> add: 1103; right value: 01000100; found value: " & integer'image(to_integer(unsigned(RAM(1103)))) severity failure;
+        assert RAM(1104) = "01001001" report "UNSUCCESSFUL TEST: # 104 byte in RAM -> add: 1104; right value: 01001001; found value: " & integer'image(to_integer(unsigned(RAM(1104)))) severity failure;
+        assert RAM(1105) = "01101100" report "UNSUCCESSFUL TEST: # 105 byte in RAM -> add: 1105; right value: 01101100; found value: " & integer'image(to_integer(unsigned(RAM(1105)))) severity failure;
+        assert RAM(1106) = "00111001" report "UNSUCCESSFUL TEST: # 106 byte in RAM -> add: 1106; right value: 00111001; found value: " & integer'image(to_integer(unsigned(RAM(1106)))) severity failure;
+        assert RAM(1107) = "01101100" report "UNSUCCESSFUL TEST: # 107 byte in RAM -> add: 1107; right value: 01101100; found value: " & integer'image(to_integer(unsigned(RAM(1107)))) severity failure;
+        assert RAM(1108) = "11010001" report "UNSUCCESSFUL TEST: # 108 byte in RAM -> add: 1108; right value: 11010001; found value: " & integer'image(to_integer(unsigned(RAM(1108)))) severity failure;
+        assert RAM(1109) = "00011111" report "UNSUCCESSFUL TEST: # 109 byte in RAM -> add: 1109; right value: 00011111; found value: " & integer'image(to_integer(unsigned(RAM(1109)))) severity failure;
+        assert RAM(1110) = "10101111" report "UNSUCCESSFUL TEST: # 110 byte in RAM -> add: 1110; right value: 10101111; found value: " & integer'image(to_integer(unsigned(RAM(1110)))) severity failure;
+        assert RAM(1111) = "01111101" report "UNSUCCESSFUL TEST: # 111 byte in RAM -> add: 1111; right value: 01111101; found value: " & integer'image(to_integer(unsigned(RAM(1111)))) severity failure;
+        assert RAM(1112) = "00101000" report "UNSUCCESSFUL TEST: # 112 byte in RAM -> add: 1112; right value: 00101000; found value: " & integer'image(to_integer(unsigned(RAM(1112)))) severity failure;
+        assert RAM(1113) = "01110000" report "UNSUCCESSFUL TEST: # 113 byte in RAM -> add: 1113; right value: 01110000; found value: " & integer'image(to_integer(unsigned(RAM(1113)))) severity failure;
+        assert RAM(1114) = "00110100" report "UNSUCCESSFUL TEST: # 114 byte in RAM -> add: 1114; right value: 00110100; found value: " & integer'image(to_integer(unsigned(RAM(1114)))) severity failure;
+        assert RAM(1115) = "10100010" report "UNSUCCESSFUL TEST: # 115 byte in RAM -> add: 1115; right value: 10100010; found value: " & integer'image(to_integer(unsigned(RAM(1115)))) severity failure;
+        assert RAM(1116) = "01100010" report "UNSUCCESSFUL TEST: # 116 byte in RAM -> add: 1116; right value: 01100010; found value: " & integer'image(to_integer(unsigned(RAM(1116)))) severity failure;
+        assert RAM(1117) = "01010110" report "UNSUCCESSFUL TEST: # 117 byte in RAM -> add: 1117; right value: 01010110; found value: " & integer'image(to_integer(unsigned(RAM(1117)))) severity failure;
+        assert RAM(1118) = "11000011" report "UNSUCCESSFUL TEST: # 118 byte in RAM -> add: 1118; right value: 11000011; found value: " & integer'image(to_integer(unsigned(RAM(1118)))) severity failure;
+        assert RAM(1119) = "10010101" report "UNSUCCESSFUL TEST: # 119 byte in RAM -> add: 1119; right value: 10010101; found value: " & integer'image(to_integer(unsigned(RAM(1119)))) severity failure;
+        assert RAM(1120) = "10110011" report "UNSUCCESSFUL TEST: # 120 byte in RAM -> add: 1120; right value: 10110011; found value: " & integer'image(to_integer(unsigned(RAM(1120)))) severity failure;
+        assert RAM(1121) = "01000100" report "UNSUCCESSFUL TEST: # 121 byte in RAM -> add: 1121; right value: 01000100; found value: " & integer'image(to_integer(unsigned(RAM(1121)))) severity failure;
+        assert RAM(1122) = "10100001" report "UNSUCCESSFUL TEST: # 122 byte in RAM -> add: 1122; right value: 10100001; found value: " & integer'image(to_integer(unsigned(RAM(1122)))) severity failure;
+        assert RAM(1123) = "00100110" report "UNSUCCESSFUL TEST: # 123 byte in RAM -> add: 1123; right value: 00100110; found value: " & integer'image(to_integer(unsigned(RAM(1123)))) severity failure;
+        assert RAM(1124) = "11001101" report "UNSUCCESSFUL TEST: # 124 byte in RAM -> add: 1124; right value: 11001101; found value: " & integer'image(to_integer(unsigned(RAM(1124)))) severity failure;
+        assert RAM(1125) = "00011111" report "UNSUCCESSFUL TEST: # 125 byte in RAM -> add: 1125; right value: 00011111; found value: " & integer'image(to_integer(unsigned(RAM(1125)))) severity failure;
+        assert RAM(1126) = "01111110" report "UNSUCCESSFUL TEST: # 126 byte in RAM -> add: 1126; right value: 01111110; found value: " & integer'image(to_integer(unsigned(RAM(1126)))) severity failure;
+        assert RAM(1127) = "10111110" report "UNSUCCESSFUL TEST: # 127 byte in RAM -> add: 1127; right value: 10111110; found value: " & integer'image(to_integer(unsigned(RAM(1127)))) severity failure;
+        assert RAM(1128) = "01010101" report "UNSUCCESSFUL TEST: # 128 byte in RAM -> add: 1128; right value: 01010101; found value: " & integer'image(to_integer(unsigned(RAM(1128)))) severity failure;
+        assert RAM(1129) = "10111110" report "UNSUCCESSFUL TEST: # 129 byte in RAM -> add: 1129; right value: 10111110; found value: " & integer'image(to_integer(unsigned(RAM(1129)))) severity failure;
+        assert RAM(1130) = "01100001" report "UNSUCCESSFUL TEST: # 130 byte in RAM -> add: 1130; right value: 01100001; found value: " & integer'image(to_integer(unsigned(RAM(1130)))) severity failure;
+        assert RAM(1131) = "00101011" report "UNSUCCESSFUL TEST: # 131 byte in RAM -> add: 1131; right value: 00101011; found value: " & integer'image(to_integer(unsigned(RAM(1131)))) severity failure;
+        assert RAM(1132) = "00001110" report "UNSUCCESSFUL TEST: # 132 byte in RAM -> add: 1132; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1132)))) severity failure;
+        assert RAM(1133) = "01101111" report "UNSUCCESSFUL TEST: # 133 byte in RAM -> add: 1133; right value: 01101111; found value: " & integer'image(to_integer(unsigned(RAM(1133)))) severity failure;
+        assert RAM(1134) = "01110000" report "UNSUCCESSFUL TEST: # 134 byte in RAM -> add: 1134; right value: 01110000; found value: " & integer'image(to_integer(unsigned(RAM(1134)))) severity failure;
+        assert RAM(1135) = "00110111" report "UNSUCCESSFUL TEST: # 135 byte in RAM -> add: 1135; right value: 00110111; found value: " & integer'image(to_integer(unsigned(RAM(1135)))) severity failure;
+        assert RAM(1136) = "00000000" report "UNSUCCESSFUL TEST: # 136 byte in RAM -> add: 1136; right value: 00000000; found value: " & integer'image(to_integer(unsigned(RAM(1136)))) severity failure;
+        assert RAM(1137) = "00111010" report "UNSUCCESSFUL TEST: # 137 byte in RAM -> add: 1137; right value: 00111010; found value: " & integer'image(to_integer(unsigned(RAM(1137)))) severity failure;
+        assert RAM(1138) = "11000011" report "UNSUCCESSFUL TEST: # 138 byte in RAM -> add: 1138; right value: 11000011; found value: " & integer'image(to_integer(unsigned(RAM(1138)))) severity failure;
+        assert RAM(1139) = "10010101" report "UNSUCCESSFUL TEST: # 139 byte in RAM -> add: 1139; right value: 10010101; found value: " & integer'image(to_integer(unsigned(RAM(1139)))) severity failure;
+        assert RAM(1140) = "10001001" report "UNSUCCESSFUL TEST: # 140 byte in RAM -> add: 1140; right value: 10001001; found value: " & integer'image(to_integer(unsigned(RAM(1140)))) severity failure;
+        assert RAM(1141) = "10001010" report "UNSUCCESSFUL TEST: # 141 byte in RAM -> add: 1141; right value: 10001010; found value: " & integer'image(to_integer(unsigned(RAM(1141)))) severity failure;
+        assert RAM(1142) = "00100110" report "UNSUCCESSFUL TEST: # 142 byte in RAM -> add: 1142; right value: 00100110; found value: " & integer'image(to_integer(unsigned(RAM(1142)))) severity failure;
+        assert RAM(1143) = "00011100" report "UNSUCCESSFUL TEST: # 143 byte in RAM -> add: 1143; right value: 00011100; found value: " & integer'image(to_integer(unsigned(RAM(1143)))) severity failure;
+        assert RAM(1144) = "11011100" report "UNSUCCESSFUL TEST: # 144 byte in RAM -> add: 1144; right value: 11011100; found value: " & integer'image(to_integer(unsigned(RAM(1144)))) severity failure;
+        assert RAM(1145) = "11011100" report "UNSUCCESSFUL TEST: # 145 byte in RAM -> add: 1145; right value: 11011100; found value: " & integer'image(to_integer(unsigned(RAM(1145)))) severity failure;
+        assert RAM(1146) = "11101011" report "UNSUCCESSFUL TEST: # 146 byte in RAM -> add: 1146; right value: 11101011; found value: " & integer'image(to_integer(unsigned(RAM(1146)))) severity failure;
+        assert RAM(1147) = "00000011" report "UNSUCCESSFUL TEST: # 147 byte in RAM -> add: 1147; right value: 00000011; found value: " & integer'image(to_integer(unsigned(RAM(1147)))) severity failure;
+        assert RAM(1148) = "01110011" report "UNSUCCESSFUL TEST: # 148 byte in RAM -> add: 1148; right value: 01110011; found value: " & integer'image(to_integer(unsigned(RAM(1148)))) severity failure;
+        assert RAM(1149) = "01111110" report "UNSUCCESSFUL TEST: # 149 byte in RAM -> add: 1149; right value: 01111110; found value: " & integer'image(to_integer(unsigned(RAM(1149)))) severity failure;
+        assert RAM(1150) = "01010110" report "UNSUCCESSFUL TEST: # 150 byte in RAM -> add: 1150; right value: 01010110; found value: " & integer'image(to_integer(unsigned(RAM(1150)))) severity failure;
+        assert RAM(1151) = "11000000" report "UNSUCCESSFUL TEST: # 151 byte in RAM -> add: 1151; right value: 11000000; found value: " & integer'image(to_integer(unsigned(RAM(1151)))) severity failure;
+        assert RAM(1152) = "00000011" report "UNSUCCESSFUL TEST: # 152 byte in RAM -> add: 1152; right value: 00000011; found value: " & integer'image(to_integer(unsigned(RAM(1152)))) severity failure;
+        assert RAM(1153) = "10011000" report "UNSUCCESSFUL TEST: # 153 byte in RAM -> add: 1153; right value: 10011000; found value: " & integer'image(to_integer(unsigned(RAM(1153)))) severity failure;
+        assert RAM(1154) = "10010110" report "UNSUCCESSFUL TEST: # 154 byte in RAM -> add: 1154; right value: 10010110; found value: " & integer'image(to_integer(unsigned(RAM(1154)))) severity failure;
+        assert RAM(1155) = "11110100" report "UNSUCCESSFUL TEST: # 155 byte in RAM -> add: 1155; right value: 11110100; found value: " & integer'image(to_integer(unsigned(RAM(1155)))) severity failure;
+        assert RAM(1156) = "10010101" report "UNSUCCESSFUL TEST: # 156 byte in RAM -> add: 1156; right value: 10010101; found value: " & integer'image(to_integer(unsigned(RAM(1156)))) severity failure;
+        assert RAM(1157) = "10111101" report "UNSUCCESSFUL TEST: # 157 byte in RAM -> add: 1157; right value: 10111101; found value: " & integer'image(to_integer(unsigned(RAM(1157)))) severity failure;
+        assert RAM(1158) = "00100110" report "UNSUCCESSFUL TEST: # 158 byte in RAM -> add: 1158; right value: 00100110; found value: " & integer'image(to_integer(unsigned(RAM(1158)))) severity failure;
+        assert RAM(1159) = "11110100" report "UNSUCCESSFUL TEST: # 159 byte in RAM -> add: 1159; right value: 11110100; found value: " & integer'image(to_integer(unsigned(RAM(1159)))) severity failure;
+        assert RAM(1160) = "01000111" report "UNSUCCESSFUL TEST: # 160 byte in RAM -> add: 1160; right value: 01000111; found value: " & integer'image(to_integer(unsigned(RAM(1160)))) severity failure;
+        assert RAM(1161) = "00001110" report "UNSUCCESSFUL TEST: # 161 byte in RAM -> add: 1161; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1161)))) severity failure;
+        assert RAM(1162) = "01100001" report "UNSUCCESSFUL TEST: # 162 byte in RAM -> add: 1162; right value: 01100001; found value: " & integer'image(to_integer(unsigned(RAM(1162)))) severity failure;
+        assert RAM(1163) = "11110111" report "UNSUCCESSFUL TEST: # 163 byte in RAM -> add: 1163; right value: 11110111; found value: " & integer'image(to_integer(unsigned(RAM(1163)))) severity failure;
+        assert RAM(1164) = "00110100" report "UNSUCCESSFUL TEST: # 164 byte in RAM -> add: 1164; right value: 00110100; found value: " & integer'image(to_integer(unsigned(RAM(1164)))) severity failure;
+        assert RAM(1165) = "01000111" report "UNSUCCESSFUL TEST: # 165 byte in RAM -> add: 1165; right value: 01000111; found value: " & integer'image(to_integer(unsigned(RAM(1165)))) severity failure;
+        assert RAM(1166) = "11011111" report "UNSUCCESSFUL TEST: # 166 byte in RAM -> add: 1166; right value: 11011111; found value: " & integer'image(to_integer(unsigned(RAM(1166)))) severity failure;
+        assert RAM(1167) = "10010110" report "UNSUCCESSFUL TEST: # 167 byte in RAM -> add: 1167; right value: 10010110; found value: " & integer'image(to_integer(unsigned(RAM(1167)))) severity failure;
+        assert RAM(1168) = "00010001" report "UNSUCCESSFUL TEST: # 168 byte in RAM -> add: 1168; right value: 00010001; found value: " & integer'image(to_integer(unsigned(RAM(1168)))) severity failure;
+        assert RAM(1169) = "00010001" report "UNSUCCESSFUL TEST: # 169 byte in RAM -> add: 1169; right value: 00010001; found value: " & integer'image(to_integer(unsigned(RAM(1169)))) severity failure;
+        assert RAM(1170) = "11001110" report "UNSUCCESSFUL TEST: # 170 byte in RAM -> add: 1170; right value: 11001110; found value: " & integer'image(to_integer(unsigned(RAM(1170)))) severity failure;
+        assert RAM(1171) = "01100010" report "UNSUCCESSFUL TEST: # 171 byte in RAM -> add: 1171; right value: 01100010; found value: " & integer'image(to_integer(unsigned(RAM(1171)))) severity failure;
+        assert RAM(1172) = "10001001" report "UNSUCCESSFUL TEST: # 172 byte in RAM -> add: 1172; right value: 10001001; found value: " & integer'image(to_integer(unsigned(RAM(1172)))) severity failure;
+        assert RAM(1173) = "10110000" report "UNSUCCESSFUL TEST: # 173 byte in RAM -> add: 1173; right value: 10110000; found value: " & integer'image(to_integer(unsigned(RAM(1173)))) severity failure;
+        assert RAM(1174) = "00110111" report "UNSUCCESSFUL TEST: # 174 byte in RAM -> add: 1174; right value: 00110111; found value: " & integer'image(to_integer(unsigned(RAM(1174)))) severity failure;
+        assert RAM(1175) = "00111010" report "UNSUCCESSFUL TEST: # 175 byte in RAM -> add: 1175; right value: 00111010; found value: " & integer'image(to_integer(unsigned(RAM(1175)))) severity failure;
+        assert RAM(1176) = "11111010" report "UNSUCCESSFUL TEST: # 176 byte in RAM -> add: 1176; right value: 11111010; found value: " & integer'image(to_integer(unsigned(RAM(1176)))) severity failure;
+        assert RAM(1177) = "00100101" report "UNSUCCESSFUL TEST: # 177 byte in RAM -> add: 1177; right value: 00100101; found value: " & integer'image(to_integer(unsigned(RAM(1177)))) severity failure;
+        assert RAM(1178) = "10000111" report "UNSUCCESSFUL TEST: # 178 byte in RAM -> add: 1178; right value: 10000111; found value: " & integer'image(to_integer(unsigned(RAM(1178)))) severity failure;
+        assert RAM(1179) = "00000011" report "UNSUCCESSFUL TEST: # 179 byte in RAM -> add: 1179; right value: 00000011; found value: " & integer'image(to_integer(unsigned(RAM(1179)))) severity failure;
+        assert RAM(1180) = "01110000" report "UNSUCCESSFUL TEST: # 180 byte in RAM -> add: 1180; right value: 01110000; found value: " & integer'image(to_integer(unsigned(RAM(1180)))) severity failure;
+        assert RAM(1181) = "00110100" report "UNSUCCESSFUL TEST: # 181 byte in RAM -> add: 1181; right value: 00110100; found value: " & integer'image(to_integer(unsigned(RAM(1181)))) severity failure;
+        assert RAM(1182) = "10100001" report "UNSUCCESSFUL TEST: # 182 byte in RAM -> add: 1182; right value: 10100001; found value: " & integer'image(to_integer(unsigned(RAM(1182)))) severity failure;
+        assert RAM(1183) = "11000011" report "UNSUCCESSFUL TEST: # 183 byte in RAM -> add: 1183; right value: 11000011; found value: " & integer'image(to_integer(unsigned(RAM(1183)))) severity failure;
+        assert RAM(1184) = "01001001" report "UNSUCCESSFUL TEST: # 184 byte in RAM -> add: 1184; right value: 01001001; found value: " & integer'image(to_integer(unsigned(RAM(1184)))) severity failure;
+        assert RAM(1185) = "10001010" report "UNSUCCESSFUL TEST: # 185 byte in RAM -> add: 1185; right value: 10001010; found value: " & integer'image(to_integer(unsigned(RAM(1185)))) severity failure;
+        assert RAM(1186) = "11001101" report "UNSUCCESSFUL TEST: # 186 byte in RAM -> add: 1186; right value: 11001101; found value: " & integer'image(to_integer(unsigned(RAM(1186)))) severity failure;
+        assert RAM(1187) = "11001110" report "UNSUCCESSFUL TEST: # 187 byte in RAM -> add: 1187; right value: 11001110; found value: " & integer'image(to_integer(unsigned(RAM(1187)))) severity failure;
+        assert RAM(1188) = "10001001" report "UNSUCCESSFUL TEST: # 188 byte in RAM -> add: 1188; right value: 10001001; found value: " & integer'image(to_integer(unsigned(RAM(1188)))) severity failure;
+        assert RAM(1189) = "10110011" report "UNSUCCESSFUL TEST: # 189 byte in RAM -> add: 1189; right value: 10110011; found value: " & integer'image(to_integer(unsigned(RAM(1189)))) severity failure;
+        assert RAM(1190) = "10101100" report "UNSUCCESSFUL TEST: # 190 byte in RAM -> add: 1190; right value: 10101100; found value: " & integer'image(to_integer(unsigned(RAM(1190)))) severity failure;
+        assert RAM(1191) = "11100101" report "UNSUCCESSFUL TEST: # 191 byte in RAM -> add: 1191; right value: 11100101; found value: " & integer'image(to_integer(unsigned(RAM(1191)))) severity failure;
+        assert RAM(1192) = "01010101" report "UNSUCCESSFUL TEST: # 192 byte in RAM -> add: 1192; right value: 01010101; found value: " & integer'image(to_integer(unsigned(RAM(1192)))) severity failure;
+        assert RAM(1193) = "01011000" report "UNSUCCESSFUL TEST: # 193 byte in RAM -> add: 1193; right value: 01011000; found value: " & integer'image(to_integer(unsigned(RAM(1193)))) severity failure;
+        assert RAM(1194) = "10101100" report "UNSUCCESSFUL TEST: # 194 byte in RAM -> add: 1194; right value: 10101100; found value: " & integer'image(to_integer(unsigned(RAM(1194)))) severity failure;
+        assert RAM(1195) = "11101000" report "UNSUCCESSFUL TEST: # 195 byte in RAM -> add: 1195; right value: 11101000; found value: " & integer'image(to_integer(unsigned(RAM(1195)))) severity failure;
+        assert RAM(1196) = "10010101" report "UNSUCCESSFUL TEST: # 196 byte in RAM -> add: 1196; right value: 10010101; found value: " & integer'image(to_integer(unsigned(RAM(1196)))) severity failure;
+        assert RAM(1197) = "01010101" report "UNSUCCESSFUL TEST: # 197 byte in RAM -> add: 1197; right value: 01010101; found value: " & integer'image(to_integer(unsigned(RAM(1197)))) severity failure;
+        assert RAM(1198) = "01010101" report "UNSUCCESSFUL TEST: # 198 byte in RAM -> add: 1198; right value: 01010101; found value: " & integer'image(to_integer(unsigned(RAM(1198)))) severity failure;
+        assert RAM(1199) = "10000100" report "UNSUCCESSFUL TEST: # 199 byte in RAM -> add: 1199; right value: 10000100; found value: " & integer'image(to_integer(unsigned(RAM(1199)))) severity failure;
+        assert RAM(1200) = "10011000" report "UNSUCCESSFUL TEST: # 200 byte in RAM -> add: 1200; right value: 10011000; found value: " & integer'image(to_integer(unsigned(RAM(1200)))) severity failure;
+        assert RAM(1201) = "10010101" report "UNSUCCESSFUL TEST: # 201 byte in RAM -> add: 1201; right value: 10010101; found value: " & integer'image(to_integer(unsigned(RAM(1201)))) severity failure;
+        assert RAM(1202) = "10000111" report "UNSUCCESSFUL TEST: # 202 byte in RAM -> add: 1202; right value: 10000111; found value: " & integer'image(to_integer(unsigned(RAM(1202)))) severity failure;
+        assert RAM(1203) = "00001101" report "UNSUCCESSFUL TEST: # 203 byte in RAM -> add: 1203; right value: 00001101; found value: " & integer'image(to_integer(unsigned(RAM(1203)))) severity failure;
+        assert RAM(1204) = "11110111" report "UNSUCCESSFUL TEST: # 204 byte in RAM -> add: 1204; right value: 11110111; found value: " & integer'image(to_integer(unsigned(RAM(1204)))) severity failure;
+        assert RAM(1205) = "00001101" report "UNSUCCESSFUL TEST: # 205 byte in RAM -> add: 1205; right value: 00001101; found value: " & integer'image(to_integer(unsigned(RAM(1205)))) severity failure;
+        assert RAM(1206) = "11001110" report "UNSUCCESSFUL TEST: # 206 byte in RAM -> add: 1206; right value: 11001110; found value: " & integer'image(to_integer(unsigned(RAM(1206)))) severity failure;
+        assert RAM(1207) = "01100001" report "UNSUCCESSFUL TEST: # 207 byte in RAM -> add: 1207; right value: 01100001; found value: " & integer'image(to_integer(unsigned(RAM(1207)))) severity failure;
+        assert RAM(1208) = "00010010" report "UNSUCCESSFUL TEST: # 208 byte in RAM -> add: 1208; right value: 00010010; found value: " & integer'image(to_integer(unsigned(RAM(1208)))) severity failure;
+        assert RAM(1209) = "10000111" report "UNSUCCESSFUL TEST: # 209 byte in RAM -> add: 1209; right value: 10000111; found value: " & integer'image(to_integer(unsigned(RAM(1209)))) severity failure;
+        assert RAM(1210) = "11011100" report "UNSUCCESSFUL TEST: # 210 byte in RAM -> add: 1210; right value: 11011100; found value: " & integer'image(to_integer(unsigned(RAM(1210)))) severity failure;
+        assert RAM(1211) = "11011111" report "UNSUCCESSFUL TEST: # 211 byte in RAM -> add: 1211; right value: 11011111; found value: " & integer'image(to_integer(unsigned(RAM(1211)))) severity failure;
+        assert RAM(1212) = "10011000" report "UNSUCCESSFUL TEST: # 212 byte in RAM -> add: 1212; right value: 10011000; found value: " & integer'image(to_integer(unsigned(RAM(1212)))) severity failure;
+        assert RAM(1213) = "10010110" report "UNSUCCESSFUL TEST: # 213 byte in RAM -> add: 1213; right value: 10010110; found value: " & integer'image(to_integer(unsigned(RAM(1213)))) severity failure;
+        assert RAM(1214) = "11111010" report "UNSUCCESSFUL TEST: # 214 byte in RAM -> add: 1214; right value: 11111010; found value: " & integer'image(to_integer(unsigned(RAM(1214)))) severity failure;
+        assert RAM(1215) = "11111010" report "UNSUCCESSFUL TEST: # 215 byte in RAM -> add: 1215; right value: 11111010; found value: " & integer'image(to_integer(unsigned(RAM(1215)))) severity failure;
+        assert RAM(1216) = "11111010" report "UNSUCCESSFUL TEST: # 216 byte in RAM -> add: 1216; right value: 11111010; found value: " & integer'image(to_integer(unsigned(RAM(1216)))) severity failure;
+        assert RAM(1217) = "11111001" report "UNSUCCESSFUL TEST: # 217 byte in RAM -> add: 1217; right value: 11111001; found value: " & integer'image(to_integer(unsigned(RAM(1217)))) severity failure;
+        assert RAM(1218) = "10001010" report "UNSUCCESSFUL TEST: # 218 byte in RAM -> add: 1218; right value: 10001010; found value: " & integer'image(to_integer(unsigned(RAM(1218)))) severity failure;
+        assert RAM(1219) = "00101011" report "UNSUCCESSFUL TEST: # 219 byte in RAM -> add: 1219; right value: 00101011; found value: " & integer'image(to_integer(unsigned(RAM(1219)))) severity failure;
+        assert RAM(1220) = "00001110" report "UNSUCCESSFUL TEST: # 220 byte in RAM -> add: 1220; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1220)))) severity failure;
+        assert RAM(1221) = "01100010" report "UNSUCCESSFUL TEST: # 221 byte in RAM -> add: 1221; right value: 01100010; found value: " & integer'image(to_integer(unsigned(RAM(1221)))) severity failure;
+        assert RAM(1222) = "01101100" report "UNSUCCESSFUL TEST: # 222 byte in RAM -> add: 1222; right value: 01101100; found value: " & integer'image(to_integer(unsigned(RAM(1222)))) severity failure;
+        assert RAM(1223) = "00000011" report "UNSUCCESSFUL TEST: # 223 byte in RAM -> add: 1223; right value: 00000011; found value: " & integer'image(to_integer(unsigned(RAM(1223)))) severity failure;
+        assert RAM(1224) = "01001010" report "UNSUCCESSFUL TEST: # 224 byte in RAM -> add: 1224; right value: 01001010; found value: " & integer'image(to_integer(unsigned(RAM(1224)))) severity failure;
+        assert RAM(1225) = "11001110" report "UNSUCCESSFUL TEST: # 225 byte in RAM -> add: 1225; right value: 11001110; found value: " & integer'image(to_integer(unsigned(RAM(1225)))) severity failure;
+        assert RAM(1226) = "01100010" report "UNSUCCESSFUL TEST: # 226 byte in RAM -> add: 1226; right value: 01100010; found value: " & integer'image(to_integer(unsigned(RAM(1226)))) severity failure;
+        assert RAM(1227) = "10111101" report "UNSUCCESSFUL TEST: # 227 byte in RAM -> add: 1227; right value: 10111101; found value: " & integer'image(to_integer(unsigned(RAM(1227)))) severity failure;
+        assert RAM(1228) = "11001101" report "UNSUCCESSFUL TEST: # 228 byte in RAM -> add: 1228; right value: 11001101; found value: " & integer'image(to_integer(unsigned(RAM(1228)))) severity failure;
+        assert RAM(1229) = "11000011" report "UNSUCCESSFUL TEST: # 229 byte in RAM -> add: 1229; right value: 11000011; found value: " & integer'image(to_integer(unsigned(RAM(1229)))) severity failure;
+        assert RAM(1230) = "01001010" report "UNSUCCESSFUL TEST: # 230 byte in RAM -> add: 1230; right value: 01001010; found value: " & integer'image(to_integer(unsigned(RAM(1230)))) severity failure;
+        assert RAM(1231) = "00011100" report "UNSUCCESSFUL TEST: # 231 byte in RAM -> add: 1231; right value: 00011100; found value: " & integer'image(to_integer(unsigned(RAM(1231)))) severity failure;
+        assert RAM(1232) = "00001110" report "UNSUCCESSFUL TEST: # 232 byte in RAM -> add: 1232; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1232)))) severity failure;
+        assert RAM(1233) = "10111101" report "UNSUCCESSFUL TEST: # 233 byte in RAM -> add: 1233; right value: 10111101; found value: " & integer'image(to_integer(unsigned(RAM(1233)))) severity failure;
+        assert RAM(1234) = "00101011" report "UNSUCCESSFUL TEST: # 234 byte in RAM -> add: 1234; right value: 00101011; found value: " & integer'image(to_integer(unsigned(RAM(1234)))) severity failure;
+        assert RAM(1235) = "11101011" report "UNSUCCESSFUL TEST: # 235 byte in RAM -> add: 1235; right value: 11101011; found value: " & integer'image(to_integer(unsigned(RAM(1235)))) severity failure;
+        assert RAM(1236) = "11101011" report "UNSUCCESSFUL TEST: # 236 byte in RAM -> add: 1236; right value: 11101011; found value: " & integer'image(to_integer(unsigned(RAM(1236)))) severity failure;
+        assert RAM(1237) = "11010001" report "UNSUCCESSFUL TEST: # 237 byte in RAM -> add: 1237; right value: 11010001; found value: " & integer'image(to_integer(unsigned(RAM(1237)))) severity failure;
+        assert RAM(1238) = "11000011" report "UNSUCCESSFUL TEST: # 238 byte in RAM -> add: 1238; right value: 11000011; found value: " & integer'image(to_integer(unsigned(RAM(1238)))) severity failure;
+        assert RAM(1239) = "01110000" report "UNSUCCESSFUL TEST: # 239 byte in RAM -> add: 1239; right value: 01110000; found value: " & integer'image(to_integer(unsigned(RAM(1239)))) severity failure;
+        assert RAM(1240) = "00111001" report "UNSUCCESSFUL TEST: # 240 byte in RAM -> add: 1240; right value: 00111001; found value: " & integer'image(to_integer(unsigned(RAM(1240)))) severity failure;
+        assert RAM(1241) = "01101111" report "UNSUCCESSFUL TEST: # 241 byte in RAM -> add: 1241; right value: 01101111; found value: " & integer'image(to_integer(unsigned(RAM(1241)))) severity failure;
+        assert RAM(1242) = "10100001" report "UNSUCCESSFUL TEST: # 242 byte in RAM -> add: 1242; right value: 10100001; found value: " & integer'image(to_integer(unsigned(RAM(1242)))) severity failure;
+        assert RAM(1243) = "11000011" report "UNSUCCESSFUL TEST: # 243 byte in RAM -> add: 1243; right value: 11000011; found value: " & integer'image(to_integer(unsigned(RAM(1243)))) severity failure;
+        assert RAM(1244) = "01110000" report "UNSUCCESSFUL TEST: # 244 byte in RAM -> add: 1244; right value: 01110000; found value: " & integer'image(to_integer(unsigned(RAM(1244)))) severity failure;
+        assert RAM(1245) = "11011111" report "UNSUCCESSFUL TEST: # 245 byte in RAM -> add: 1245; right value: 11011111; found value: " & integer'image(to_integer(unsigned(RAM(1245)))) severity failure;
+        assert RAM(1246) = "10101100" report "UNSUCCESSFUL TEST: # 246 byte in RAM -> add: 1246; right value: 10101100; found value: " & integer'image(to_integer(unsigned(RAM(1246)))) severity failure;
+        assert RAM(1247) = "00000000" report "UNSUCCESSFUL TEST: # 247 byte in RAM -> add: 1247; right value: 00000000; found value: " & integer'image(to_integer(unsigned(RAM(1247)))) severity failure;
+        assert RAM(1248) = "00111001" report "UNSUCCESSFUL TEST: # 248 byte in RAM -> add: 1248; right value: 00111001; found value: " & integer'image(to_integer(unsigned(RAM(1248)))) severity failure;
+        assert RAM(1249) = "01101100" report "UNSUCCESSFUL TEST: # 249 byte in RAM -> add: 1249; right value: 01101100; found value: " & integer'image(to_integer(unsigned(RAM(1249)))) severity failure;
+        assert RAM(1250) = "11011111" report "UNSUCCESSFUL TEST: # 250 byte in RAM -> add: 1250; right value: 11011111; found value: " & integer'image(to_integer(unsigned(RAM(1250)))) severity failure;
+        assert RAM(1251) = "01000100" report "UNSUCCESSFUL TEST: # 251 byte in RAM -> add: 1251; right value: 01000100; found value: " & integer'image(to_integer(unsigned(RAM(1251)))) severity failure;
+        assert RAM(1252) = "10011000" report "UNSUCCESSFUL TEST: # 252 byte in RAM -> add: 1252; right value: 10011000; found value: " & integer'image(to_integer(unsigned(RAM(1252)))) severity failure;
+        assert RAM(1253) = "01001001" report "UNSUCCESSFUL TEST: # 253 byte in RAM -> add: 1253; right value: 01001001; found value: " & integer'image(to_integer(unsigned(RAM(1253)))) severity failure;
+        assert RAM(1254) = "01100001" report "UNSUCCESSFUL TEST: # 254 byte in RAM -> add: 1254; right value: 01100001; found value: " & integer'image(to_integer(unsigned(RAM(1254)))) severity failure;
+        assert RAM(1255) = "00100110" report "UNSUCCESSFUL TEST: # 255 byte in RAM -> add: 1255; right value: 00100110; found value: " & integer'image(to_integer(unsigned(RAM(1255)))) severity failure;
+        assert RAM(1256) = "11001101" report "UNSUCCESSFUL TEST: # 256 byte in RAM -> add: 1256; right value: 11001101; found value: " & integer'image(to_integer(unsigned(RAM(1256)))) severity failure;
+        assert RAM(1257) = "00010001" report "UNSUCCESSFUL TEST: # 257 byte in RAM -> add: 1257; right value: 00010001; found value: " & integer'image(to_integer(unsigned(RAM(1257)))) severity failure;
+        assert RAM(1258) = "11001101" report "UNSUCCESSFUL TEST: # 258 byte in RAM -> add: 1258; right value: 11001101; found value: " & integer'image(to_integer(unsigned(RAM(1258)))) severity failure;
+        assert RAM(1259) = "00100101" report "UNSUCCESSFUL TEST: # 259 byte in RAM -> add: 1259; right value: 00100101; found value: " & integer'image(to_integer(unsigned(RAM(1259)))) severity failure;
+        assert RAM(1260) = "01010110" report "UNSUCCESSFUL TEST: # 260 byte in RAM -> add: 1260; right value: 01010110; found value: " & integer'image(to_integer(unsigned(RAM(1260)))) severity failure;
+        assert RAM(1261) = "00100110" report "UNSUCCESSFUL TEST: # 261 byte in RAM -> add: 1261; right value: 00100110; found value: " & integer'image(to_integer(unsigned(RAM(1261)))) severity failure;
+        assert RAM(1262) = "11111001" report "UNSUCCESSFUL TEST: # 262 byte in RAM -> add: 1262; right value: 11111001; found value: " & integer'image(to_integer(unsigned(RAM(1262)))) severity failure;
+        assert RAM(1263) = "10110011" report "UNSUCCESSFUL TEST: # 263 byte in RAM -> add: 1263; right value: 10110011; found value: " & integer'image(to_integer(unsigned(RAM(1263)))) severity failure;
+        assert RAM(1264) = "10011011" report "UNSUCCESSFUL TEST: # 264 byte in RAM -> add: 1264; right value: 10011011; found value: " & integer'image(to_integer(unsigned(RAM(1264)))) severity failure;
+        assert RAM(1265) = "00000000" report "UNSUCCESSFUL TEST: # 265 byte in RAM -> add: 1265; right value: 00000000; found value: " & integer'image(to_integer(unsigned(RAM(1265)))) severity failure;
+        assert RAM(1266) = "11010001" report "UNSUCCESSFUL TEST: # 266 byte in RAM -> add: 1266; right value: 11010001; found value: " & integer'image(to_integer(unsigned(RAM(1266)))) severity failure;
+        assert RAM(1267) = "11111001" report "UNSUCCESSFUL TEST: # 267 byte in RAM -> add: 1267; right value: 11111001; found value: " & integer'image(to_integer(unsigned(RAM(1267)))) severity failure;
+        assert RAM(1268) = "10110011" report "UNSUCCESSFUL TEST: # 268 byte in RAM -> add: 1268; right value: 10110011; found value: " & integer'image(to_integer(unsigned(RAM(1268)))) severity failure;
+        assert RAM(1269) = "10100001" report "UNSUCCESSFUL TEST: # 269 byte in RAM -> add: 1269; right value: 10100001; found value: " & integer'image(to_integer(unsigned(RAM(1269)))) severity failure;
+        assert RAM(1270) = "11000000" report "UNSUCCESSFUL TEST: # 270 byte in RAM -> add: 1270; right value: 11000000; found value: " & integer'image(to_integer(unsigned(RAM(1270)))) severity failure;
+        assert RAM(1271) = "11010010" report "UNSUCCESSFUL TEST: # 271 byte in RAM -> add: 1271; right value: 11010010; found value: " & integer'image(to_integer(unsigned(RAM(1271)))) severity failure;
+        assert RAM(1272) = "10001001" report "UNSUCCESSFUL TEST: # 272 byte in RAM -> add: 1272; right value: 10001001; found value: " & integer'image(to_integer(unsigned(RAM(1272)))) severity failure;
+        assert RAM(1273) = "10000100" report "UNSUCCESSFUL TEST: # 273 byte in RAM -> add: 1273; right value: 10000100; found value: " & integer'image(to_integer(unsigned(RAM(1273)))) severity failure;
+        assert RAM(1274) = "10011011" report "UNSUCCESSFUL TEST: # 274 byte in RAM -> add: 1274; right value: 10011011; found value: " & integer'image(to_integer(unsigned(RAM(1274)))) severity failure;
+        assert RAM(1275) = "11100101" report "UNSUCCESSFUL TEST: # 275 byte in RAM -> add: 1275; right value: 11100101; found value: " & integer'image(to_integer(unsigned(RAM(1275)))) severity failure;
+        assert RAM(1276) = "10110011" report "UNSUCCESSFUL TEST: # 276 byte in RAM -> add: 1276; right value: 10110011; found value: " & integer'image(to_integer(unsigned(RAM(1276)))) severity failure;
+        assert RAM(1277) = "10101111" report "UNSUCCESSFUL TEST: # 277 byte in RAM -> add: 1277; right value: 10101111; found value: " & integer'image(to_integer(unsigned(RAM(1277)))) severity failure;
+        assert RAM(1278) = "01001010" report "UNSUCCESSFUL TEST: # 278 byte in RAM -> add: 1278; right value: 01001010; found value: " & integer'image(to_integer(unsigned(RAM(1278)))) severity failure;
+        assert RAM(1279) = "11111001" report "UNSUCCESSFUL TEST: # 279 byte in RAM -> add: 1279; right value: 11111001; found value: " & integer'image(to_integer(unsigned(RAM(1279)))) severity failure;
+        assert RAM(1280) = "01101100" report "UNSUCCESSFUL TEST: # 280 byte in RAM -> add: 1280; right value: 01101100; found value: " & integer'image(to_integer(unsigned(RAM(1280)))) severity failure;
+        assert RAM(1281) = "00111001" report "UNSUCCESSFUL TEST: # 281 byte in RAM -> add: 1281; right value: 00111001; found value: " & integer'image(to_integer(unsigned(RAM(1281)))) severity failure;
+        assert RAM(1282) = "01010110" report "UNSUCCESSFUL TEST: # 282 byte in RAM -> add: 1282; right value: 01010110; found value: " & integer'image(to_integer(unsigned(RAM(1282)))) severity failure;
+        assert RAM(1283) = "11110100" report "UNSUCCESSFUL TEST: # 283 byte in RAM -> add: 1283; right value: 11110100; found value: " & integer'image(to_integer(unsigned(RAM(1283)))) severity failure;
+        assert RAM(1284) = "10011000" report "UNSUCCESSFUL TEST: # 284 byte in RAM -> add: 1284; right value: 10011000; found value: " & integer'image(to_integer(unsigned(RAM(1284)))) severity failure;
+        assert RAM(1285) = "10100010" report "UNSUCCESSFUL TEST: # 285 byte in RAM -> add: 1285; right value: 10100010; found value: " & integer'image(to_integer(unsigned(RAM(1285)))) severity failure;
+        assert RAM(1286) = "01101111" report "UNSUCCESSFUL TEST: # 286 byte in RAM -> add: 1286; right value: 01101111; found value: " & integer'image(to_integer(unsigned(RAM(1286)))) severity failure;
+        assert RAM(1287) = "10010110" report "UNSUCCESSFUL TEST: # 287 byte in RAM -> add: 1287; right value: 10010110; found value: " & integer'image(to_integer(unsigned(RAM(1287)))) severity failure;
+        assert RAM(1288) = "00011111" report "UNSUCCESSFUL TEST: # 288 byte in RAM -> add: 1288; right value: 00011111; found value: " & integer'image(to_integer(unsigned(RAM(1288)))) severity failure;
+        assert RAM(1289) = "10100001" report "UNSUCCESSFUL TEST: # 289 byte in RAM -> add: 1289; right value: 10100001; found value: " & integer'image(to_integer(unsigned(RAM(1289)))) severity failure;
+        assert RAM(1290) = "00100110" report "UNSUCCESSFUL TEST: # 290 byte in RAM -> add: 1290; right value: 00100110; found value: " & integer'image(to_integer(unsigned(RAM(1290)))) severity failure;
+        assert RAM(1291) = "00010010" report "UNSUCCESSFUL TEST: # 291 byte in RAM -> add: 1291; right value: 00010010; found value: " & integer'image(to_integer(unsigned(RAM(1291)))) severity failure;
+        assert RAM(1292) = "10111101" report "UNSUCCESSFUL TEST: # 292 byte in RAM -> add: 1292; right value: 10111101; found value: " & integer'image(to_integer(unsigned(RAM(1292)))) severity failure;
+        assert RAM(1293) = "11111001" report "UNSUCCESSFUL TEST: # 293 byte in RAM -> add: 1293; right value: 11111001; found value: " & integer'image(to_integer(unsigned(RAM(1293)))) severity failure;
+        assert RAM(1294) = "01011000" report "UNSUCCESSFUL TEST: # 294 byte in RAM -> add: 1294; right value: 01011000; found value: " & integer'image(to_integer(unsigned(RAM(1294)))) severity failure;
+        assert RAM(1295) = "10101111" report "UNSUCCESSFUL TEST: # 295 byte in RAM -> add: 1295; right value: 10101111; found value: " & integer'image(to_integer(unsigned(RAM(1295)))) severity failure;
+        assert RAM(1296) = "10011011" report "UNSUCCESSFUL TEST: # 296 byte in RAM -> add: 1296; right value: 10011011; found value: " & integer'image(to_integer(unsigned(RAM(1296)))) severity failure;
+        assert RAM(1297) = "00000000" report "UNSUCCESSFUL TEST: # 297 byte in RAM -> add: 1297; right value: 00000000; found value: " & integer'image(to_integer(unsigned(RAM(1297)))) severity failure;
+        assert RAM(1298) = "11011111" report "UNSUCCESSFUL TEST: # 298 byte in RAM -> add: 1298; right value: 11011111; found value: " & integer'image(to_integer(unsigned(RAM(1298)))) severity failure;
+        assert RAM(1299) = "10010110" report "UNSUCCESSFUL TEST: # 299 byte in RAM -> add: 1299; right value: 10010110; found value: " & integer'image(to_integer(unsigned(RAM(1299)))) severity failure;
+        assert RAM(1300) = "11110100" report "UNSUCCESSFUL TEST: # 300 byte in RAM -> add: 1300; right value: 11110100; found value: " & integer'image(to_integer(unsigned(RAM(1300)))) severity failure;
+        assert RAM(1301) = "01001010" report "UNSUCCESSFUL TEST: # 301 byte in RAM -> add: 1301; right value: 01001010; found value: " & integer'image(to_integer(unsigned(RAM(1301)))) severity failure;
+        assert RAM(1302) = "00011100" report "UNSUCCESSFUL TEST: # 302 byte in RAM -> add: 1302; right value: 00011100; found value: " & integer'image(to_integer(unsigned(RAM(1302)))) severity failure;
+        assert RAM(1303) = "00111010" report "UNSUCCESSFUL TEST: # 303 byte in RAM -> add: 1303; right value: 00111010; found value: " & integer'image(to_integer(unsigned(RAM(1303)))) severity failure;
+        assert RAM(1304) = "11110111" report "UNSUCCESSFUL TEST: # 304 byte in RAM -> add: 1304; right value: 11110111; found value: " & integer'image(to_integer(unsigned(RAM(1304)))) severity failure;
+        assert RAM(1305) = "00111001" report "UNSUCCESSFUL TEST: # 305 byte in RAM -> add: 1305; right value: 00111001; found value: " & integer'image(to_integer(unsigned(RAM(1305)))) severity failure;
+        assert RAM(1306) = "10001001" report "UNSUCCESSFUL TEST: # 306 byte in RAM -> add: 1306; right value: 10001001; found value: " & integer'image(to_integer(unsigned(RAM(1306)))) severity failure;
+        assert RAM(1307) = "01100001" report "UNSUCCESSFUL TEST: # 307 byte in RAM -> add: 1307; right value: 01100001; found value: " & integer'image(to_integer(unsigned(RAM(1307)))) severity failure;
+        assert RAM(1308) = "11000011" report "UNSUCCESSFUL TEST: # 308 byte in RAM -> add: 1308; right value: 11000011; found value: " & integer'image(to_integer(unsigned(RAM(1308)))) severity failure;
+        assert RAM(1309) = "10101100" report "UNSUCCESSFUL TEST: # 309 byte in RAM -> add: 1309; right value: 10101100; found value: " & integer'image(to_integer(unsigned(RAM(1309)))) severity failure;
+        assert RAM(1310) = "11011111" report "UNSUCCESSFUL TEST: # 310 byte in RAM -> add: 1310; right value: 11011111; found value: " & integer'image(to_integer(unsigned(RAM(1310)))) severity failure;
+        assert RAM(1311) = "10100010" report "UNSUCCESSFUL TEST: # 311 byte in RAM -> add: 1311; right value: 10100010; found value: " & integer'image(to_integer(unsigned(RAM(1311)))) severity failure;
+        assert RAM(1312) = "01100001" report "UNSUCCESSFUL TEST: # 312 byte in RAM -> add: 1312; right value: 01100001; found value: " & integer'image(to_integer(unsigned(RAM(1312)))) severity failure;
+        assert RAM(1313) = "00101011" report "UNSUCCESSFUL TEST: # 313 byte in RAM -> add: 1313; right value: 00101011; found value: " & integer'image(to_integer(unsigned(RAM(1313)))) severity failure;
+        assert RAM(1314) = "00000000" report "UNSUCCESSFUL TEST: # 314 byte in RAM -> add: 1314; right value: 00000000; found value: " & integer'image(to_integer(unsigned(RAM(1314)))) severity failure;
+        assert RAM(1315) = "00001110" report "UNSUCCESSFUL TEST: # 315 byte in RAM -> add: 1315; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1315)))) severity failure;
+        assert RAM(1316) = "10001001" report "UNSUCCESSFUL TEST: # 316 byte in RAM -> add: 1316; right value: 10001001; found value: " & integer'image(to_integer(unsigned(RAM(1316)))) severity failure;
+        assert RAM(1317) = "10000100" report "UNSUCCESSFUL TEST: # 317 byte in RAM -> add: 1317; right value: 10000100; found value: " & integer'image(to_integer(unsigned(RAM(1317)))) severity failure;
+        assert RAM(1318) = "01000100" report "UNSUCCESSFUL TEST: # 318 byte in RAM -> add: 1318; right value: 01000100; found value: " & integer'image(to_integer(unsigned(RAM(1318)))) severity failure;
+        assert RAM(1319) = "01110011" report "UNSUCCESSFUL TEST: # 319 byte in RAM -> add: 1319; right value: 01110011; found value: " & integer'image(to_integer(unsigned(RAM(1319)))) severity failure;
+        assert RAM(1320) = "10010101" report "UNSUCCESSFUL TEST: # 320 byte in RAM -> add: 1320; right value: 10010101; found value: " & integer'image(to_integer(unsigned(RAM(1320)))) severity failure;
+        assert RAM(1321) = "01101100" report "UNSUCCESSFUL TEST: # 321 byte in RAM -> add: 1321; right value: 01101100; found value: " & integer'image(to_integer(unsigned(RAM(1321)))) severity failure;
+        assert RAM(1322) = "11011100" report "UNSUCCESSFUL TEST: # 322 byte in RAM -> add: 1322; right value: 11011100; found value: " & integer'image(to_integer(unsigned(RAM(1322)))) severity failure;
+        assert RAM(1323) = "00110111" report "UNSUCCESSFUL TEST: # 323 byte in RAM -> add: 1323; right value: 00110111; found value: " & integer'image(to_integer(unsigned(RAM(1323)))) severity failure;
+        assert RAM(1324) = "00110100" report "UNSUCCESSFUL TEST: # 324 byte in RAM -> add: 1324; right value: 00110100; found value: " & integer'image(to_integer(unsigned(RAM(1324)))) severity failure;
+        assert RAM(1325) = "10100010" report "UNSUCCESSFUL TEST: # 325 byte in RAM -> add: 1325; right value: 10100010; found value: " & integer'image(to_integer(unsigned(RAM(1325)))) severity failure;
+        assert RAM(1326) = "01101100" report "UNSUCCESSFUL TEST: # 326 byte in RAM -> add: 1326; right value: 01101100; found value: " & integer'image(to_integer(unsigned(RAM(1326)))) severity failure;
+        assert RAM(1327) = "11011111" report "UNSUCCESSFUL TEST: # 327 byte in RAM -> add: 1327; right value: 11011111; found value: " & integer'image(to_integer(unsigned(RAM(1327)))) severity failure;
+        assert RAM(1328) = "10100010" report "UNSUCCESSFUL TEST: # 328 byte in RAM -> add: 1328; right value: 10100010; found value: " & integer'image(to_integer(unsigned(RAM(1328)))) severity failure;
+        assert RAM(1329) = "01011000" report "UNSUCCESSFUL TEST: # 329 byte in RAM -> add: 1329; right value: 01011000; found value: " & integer'image(to_integer(unsigned(RAM(1329)))) severity failure;
+        assert RAM(1330) = "10101100" report "UNSUCCESSFUL TEST: # 330 byte in RAM -> add: 1330; right value: 10101100; found value: " & integer'image(to_integer(unsigned(RAM(1330)))) severity failure;
+        assert RAM(1331) = "00111010" report "UNSUCCESSFUL TEST: # 331 byte in RAM -> add: 1331; right value: 00111010; found value: " & integer'image(to_integer(unsigned(RAM(1331)))) severity failure;
+        assert RAM(1332) = "00010001" report "UNSUCCESSFUL TEST: # 332 byte in RAM -> add: 1332; right value: 00010001; found value: " & integer'image(to_integer(unsigned(RAM(1332)))) severity failure;
+        assert RAM(1333) = "00010010" report "UNSUCCESSFUL TEST: # 333 byte in RAM -> add: 1333; right value: 00010010; found value: " & integer'image(to_integer(unsigned(RAM(1333)))) severity failure;
+        assert RAM(1334) = "10110011" report "UNSUCCESSFUL TEST: # 334 byte in RAM -> add: 1334; right value: 10110011; found value: " & integer'image(to_integer(unsigned(RAM(1334)))) severity failure;
+        assert RAM(1335) = "10100001" report "UNSUCCESSFUL TEST: # 335 byte in RAM -> add: 1335; right value: 10100001; found value: " & integer'image(to_integer(unsigned(RAM(1335)))) severity failure;
+        assert RAM(1336) = "11111001" report "UNSUCCESSFUL TEST: # 336 byte in RAM -> add: 1336; right value: 11111001; found value: " & integer'image(to_integer(unsigned(RAM(1336)))) severity failure;
+        assert RAM(1337) = "01100010" report "UNSUCCESSFUL TEST: # 337 byte in RAM -> add: 1337; right value: 01100010; found value: " & integer'image(to_integer(unsigned(RAM(1337)))) severity failure;
+        assert RAM(1338) = "01010101" report "UNSUCCESSFUL TEST: # 338 byte in RAM -> add: 1338; right value: 01010101; found value: " & integer'image(to_integer(unsigned(RAM(1338)))) severity failure;
+        assert RAM(1339) = "10111101" report "UNSUCCESSFUL TEST: # 339 byte in RAM -> add: 1339; right value: 10111101; found value: " & integer'image(to_integer(unsigned(RAM(1339)))) severity failure;
+        assert RAM(1340) = "11001110" report "UNSUCCESSFUL TEST: # 340 byte in RAM -> add: 1340; right value: 11001110; found value: " & integer'image(to_integer(unsigned(RAM(1340)))) severity failure;
+        assert RAM(1341) = "01011011" report "UNSUCCESSFUL TEST: # 341 byte in RAM -> add: 1341; right value: 01011011; found value: " & integer'image(to_integer(unsigned(RAM(1341)))) severity failure;
+        assert RAM(1342) = "00000000" report "UNSUCCESSFUL TEST: # 342 byte in RAM -> add: 1342; right value: 00000000; found value: " & integer'image(to_integer(unsigned(RAM(1342)))) severity failure;
+        assert RAM(1343) = "00110100" report "UNSUCCESSFUL TEST: # 343 byte in RAM -> add: 1343; right value: 00110100; found value: " & integer'image(to_integer(unsigned(RAM(1343)))) severity failure;
+        assert RAM(1344) = "10010110" report "UNSUCCESSFUL TEST: # 344 byte in RAM -> add: 1344; right value: 10010110; found value: " & integer'image(to_integer(unsigned(RAM(1344)))) severity failure;
+        assert RAM(1345) = "00100101" report "UNSUCCESSFUL TEST: # 345 byte in RAM -> add: 1345; right value: 00100101; found value: " & integer'image(to_integer(unsigned(RAM(1345)))) severity failure;
+        assert RAM(1346) = "10110011" report "UNSUCCESSFUL TEST: # 346 byte in RAM -> add: 1346; right value: 10110011; found value: " & integer'image(to_integer(unsigned(RAM(1346)))) severity failure;
+        assert RAM(1347) = "01111101" report "UNSUCCESSFUL TEST: # 347 byte in RAM -> add: 1347; right value: 01111101; found value: " & integer'image(to_integer(unsigned(RAM(1347)))) severity failure;
+        assert RAM(1348) = "11111001" report "UNSUCCESSFUL TEST: # 348 byte in RAM -> add: 1348; right value: 11111001; found value: " & integer'image(to_integer(unsigned(RAM(1348)))) severity failure;
+        assert RAM(1349) = "01101111" report "UNSUCCESSFUL TEST: # 349 byte in RAM -> add: 1349; right value: 01101111; found value: " & integer'image(to_integer(unsigned(RAM(1349)))) severity failure;
+        assert RAM(1350) = "10101111" report "UNSUCCESSFUL TEST: # 350 byte in RAM -> add: 1350; right value: 10101111; found value: " & integer'image(to_integer(unsigned(RAM(1350)))) severity failure;
+        assert RAM(1351) = "01110011" report "UNSUCCESSFUL TEST: # 351 byte in RAM -> add: 1351; right value: 01110011; found value: " & integer'image(to_integer(unsigned(RAM(1351)))) severity failure;
+        assert RAM(1352) = "10101100" report "UNSUCCESSFUL TEST: # 352 byte in RAM -> add: 1352; right value: 10101100; found value: " & integer'image(to_integer(unsigned(RAM(1352)))) severity failure;
+        assert RAM(1353) = "11011100" report "UNSUCCESSFUL TEST: # 353 byte in RAM -> add: 1353; right value: 11011100; found value: " & integer'image(to_integer(unsigned(RAM(1353)))) severity failure;
+        assert RAM(1354) = "00110111" report "UNSUCCESSFUL TEST: # 354 byte in RAM -> add: 1354; right value: 00110111; found value: " & integer'image(to_integer(unsigned(RAM(1354)))) severity failure;
+        assert RAM(1355) = "11100101" report "UNSUCCESSFUL TEST: # 355 byte in RAM -> add: 1355; right value: 11100101; found value: " & integer'image(to_integer(unsigned(RAM(1355)))) severity failure;
+        assert RAM(1356) = "10110011" report "UNSUCCESSFUL TEST: # 356 byte in RAM -> add: 1356; right value: 10110011; found value: " & integer'image(to_integer(unsigned(RAM(1356)))) severity failure;
+        assert RAM(1357) = "01111101" report "UNSUCCESSFUL TEST: # 357 byte in RAM -> add: 1357; right value: 01111101; found value: " & integer'image(to_integer(unsigned(RAM(1357)))) severity failure;
+        assert RAM(1358) = "11110100" report "UNSUCCESSFUL TEST: # 358 byte in RAM -> add: 1358; right value: 11110100; found value: " & integer'image(to_integer(unsigned(RAM(1358)))) severity failure;
+        assert RAM(1359) = "01110000" report "UNSUCCESSFUL TEST: # 359 byte in RAM -> add: 1359; right value: 01110000; found value: " & integer'image(to_integer(unsigned(RAM(1359)))) severity failure;
+        assert RAM(1360) = "11011100" report "UNSUCCESSFUL TEST: # 360 byte in RAM -> add: 1360; right value: 11011100; found value: " & integer'image(to_integer(unsigned(RAM(1360)))) severity failure;
+        assert RAM(1361) = "11010001" report "UNSUCCESSFUL TEST: # 361 byte in RAM -> add: 1361; right value: 11010001; found value: " & integer'image(to_integer(unsigned(RAM(1361)))) severity failure;
+        assert RAM(1362) = "00101000" report "UNSUCCESSFUL TEST: # 362 byte in RAM -> add: 1362; right value: 00101000; found value: " & integer'image(to_integer(unsigned(RAM(1362)))) severity failure;
+        assert RAM(1363) = "01001001" report "UNSUCCESSFUL TEST: # 363 byte in RAM -> add: 1363; right value: 01001001; found value: " & integer'image(to_integer(unsigned(RAM(1363)))) severity failure;
+        assert RAM(1364) = "10110011" report "UNSUCCESSFUL TEST: # 364 byte in RAM -> add: 1364; right value: 10110011; found value: " & integer'image(to_integer(unsigned(RAM(1364)))) severity failure;
+        assert RAM(1365) = "01110011" report "UNSUCCESSFUL TEST: # 365 byte in RAM -> add: 1365; right value: 01110011; found value: " & integer'image(to_integer(unsigned(RAM(1365)))) severity failure;
+        assert RAM(1366) = "10011011" report "UNSUCCESSFUL TEST: # 366 byte in RAM -> add: 1366; right value: 10011011; found value: " & integer'image(to_integer(unsigned(RAM(1366)))) severity failure;
+        assert RAM(1367) = "11011100" report "UNSUCCESSFUL TEST: # 367 byte in RAM -> add: 1367; right value: 11011100; found value: " & integer'image(to_integer(unsigned(RAM(1367)))) severity failure;
+        assert RAM(1368) = "00000000" report "UNSUCCESSFUL TEST: # 368 byte in RAM -> add: 1368; right value: 00000000; found value: " & integer'image(to_integer(unsigned(RAM(1368)))) severity failure;
+        assert RAM(1369) = "11101011" report "UNSUCCESSFUL TEST: # 369 byte in RAM -> add: 1369; right value: 11101011; found value: " & integer'image(to_integer(unsigned(RAM(1369)))) severity failure;
+        assert RAM(1370) = "00000000" report "UNSUCCESSFUL TEST: # 370 byte in RAM -> add: 1370; right value: 00000000; found value: " & integer'image(to_integer(unsigned(RAM(1370)))) severity failure;
+        assert RAM(1371) = "11010001" report "UNSUCCESSFUL TEST: # 371 byte in RAM -> add: 1371; right value: 11010001; found value: " & integer'image(to_integer(unsigned(RAM(1371)))) severity failure;
+        assert RAM(1372) = "00011111" report "UNSUCCESSFUL TEST: # 372 byte in RAM -> add: 1372; right value: 00011111; found value: " & integer'image(to_integer(unsigned(RAM(1372)))) severity failure;
+        assert RAM(1373) = "01001010" report "UNSUCCESSFUL TEST: # 373 byte in RAM -> add: 1373; right value: 01001010; found value: " & integer'image(to_integer(unsigned(RAM(1373)))) severity failure;
+        assert RAM(1374) = "11111001" report "UNSUCCESSFUL TEST: # 374 byte in RAM -> add: 1374; right value: 11111001; found value: " & integer'image(to_integer(unsigned(RAM(1374)))) severity failure;
+        assert RAM(1375) = "10111101" report "UNSUCCESSFUL TEST: # 375 byte in RAM -> add: 1375; right value: 10111101; found value: " & integer'image(to_integer(unsigned(RAM(1375)))) severity failure;
+        assert RAM(1376) = "00100110" report "UNSUCCESSFUL TEST: # 376 byte in RAM -> add: 1376; right value: 00100110; found value: " & integer'image(to_integer(unsigned(RAM(1376)))) severity failure;
+        assert RAM(1377) = "00101000" report "UNSUCCESSFUL TEST: # 377 byte in RAM -> add: 1377; right value: 00101000; found value: " & integer'image(to_integer(unsigned(RAM(1377)))) severity failure;
+        assert RAM(1378) = "10010110" report "UNSUCCESSFUL TEST: # 378 byte in RAM -> add: 1378; right value: 10010110; found value: " & integer'image(to_integer(unsigned(RAM(1378)))) severity failure;
+        assert RAM(1379) = "11111001" report "UNSUCCESSFUL TEST: # 379 byte in RAM -> add: 1379; right value: 11111001; found value: " & integer'image(to_integer(unsigned(RAM(1379)))) severity failure;
+        assert RAM(1380) = "01010110" report "UNSUCCESSFUL TEST: # 380 byte in RAM -> add: 1380; right value: 01010110; found value: " & integer'image(to_integer(unsigned(RAM(1380)))) severity failure;
+        assert RAM(1381) = "11110111" report "UNSUCCESSFUL TEST: # 381 byte in RAM -> add: 1381; right value: 11110111; found value: " & integer'image(to_integer(unsigned(RAM(1381)))) severity failure;
+        assert RAM(1382) = "11010001" report "UNSUCCESSFUL TEST: # 382 byte in RAM -> add: 1382; right value: 11010001; found value: " & integer'image(to_integer(unsigned(RAM(1382)))) severity failure;
+        assert RAM(1383) = "00101011" report "UNSUCCESSFUL TEST: # 383 byte in RAM -> add: 1383; right value: 00101011; found value: " & integer'image(to_integer(unsigned(RAM(1383)))) severity failure;
+        assert RAM(1384) = "00000000" report "UNSUCCESSFUL TEST: # 384 byte in RAM -> add: 1384; right value: 00000000; found value: " & integer'image(to_integer(unsigned(RAM(1384)))) severity failure;
+        assert RAM(1385) = "11100101" report "UNSUCCESSFUL TEST: # 385 byte in RAM -> add: 1385; right value: 11100101; found value: " & integer'image(to_integer(unsigned(RAM(1385)))) severity failure;
+        assert RAM(1386) = "01101100" report "UNSUCCESSFUL TEST: # 386 byte in RAM -> add: 1386; right value: 01101100; found value: " & integer'image(to_integer(unsigned(RAM(1386)))) severity failure;
+        assert RAM(1387) = "00001101" report "UNSUCCESSFUL TEST: # 387 byte in RAM -> add: 1387; right value: 00001101; found value: " & integer'image(to_integer(unsigned(RAM(1387)))) severity failure;
+        assert RAM(1388) = "00100101" report "UNSUCCESSFUL TEST: # 388 byte in RAM -> add: 1388; right value: 00100101; found value: " & integer'image(to_integer(unsigned(RAM(1388)))) severity failure;
+        assert RAM(1389) = "01101111" report "UNSUCCESSFUL TEST: # 389 byte in RAM -> add: 1389; right value: 01101111; found value: " & integer'image(to_integer(unsigned(RAM(1389)))) severity failure;
+        assert RAM(1390) = "10011011" report "UNSUCCESSFUL TEST: # 390 byte in RAM -> add: 1390; right value: 10011011; found value: " & integer'image(to_integer(unsigned(RAM(1390)))) severity failure;
+        assert RAM(1391) = "11101011" report "UNSUCCESSFUL TEST: # 391 byte in RAM -> add: 1391; right value: 11101011; found value: " & integer'image(to_integer(unsigned(RAM(1391)))) severity failure;
+        assert RAM(1392) = "00000011" report "UNSUCCESSFUL TEST: # 392 byte in RAM -> add: 1392; right value: 00000011; found value: " & integer'image(to_integer(unsigned(RAM(1392)))) severity failure;
+        assert RAM(1393) = "01000100" report "UNSUCCESSFUL TEST: # 393 byte in RAM -> add: 1393; right value: 01000100; found value: " & integer'image(to_integer(unsigned(RAM(1393)))) severity failure;
+        assert RAM(1394) = "10010101" report "UNSUCCESSFUL TEST: # 394 byte in RAM -> add: 1394; right value: 10010101; found value: " & integer'image(to_integer(unsigned(RAM(1394)))) severity failure;
+        assert RAM(1395) = "10111101" report "UNSUCCESSFUL TEST: # 395 byte in RAM -> add: 1395; right value: 10111101; found value: " & integer'image(to_integer(unsigned(RAM(1395)))) severity failure;
+        assert RAM(1396) = "11001101" report "UNSUCCESSFUL TEST: # 396 byte in RAM -> add: 1396; right value: 11001101; found value: " & integer'image(to_integer(unsigned(RAM(1396)))) severity failure;
+        assert RAM(1397) = "00010001" report "UNSUCCESSFUL TEST: # 397 byte in RAM -> add: 1397; right value: 00010001; found value: " & integer'image(to_integer(unsigned(RAM(1397)))) severity failure;
+        assert RAM(1398) = "11110111" report "UNSUCCESSFUL TEST: # 398 byte in RAM -> add: 1398; right value: 11110111; found value: " & integer'image(to_integer(unsigned(RAM(1398)))) severity failure;
+        assert RAM(1399) = "00110100" report "UNSUCCESSFUL TEST: # 399 byte in RAM -> add: 1399; right value: 00110100; found value: " & integer'image(to_integer(unsigned(RAM(1399)))) severity failure;
+        assert RAM(1400) = "10100001" report "UNSUCCESSFUL TEST: # 400 byte in RAM -> add: 1400; right value: 10100001; found value: " & integer'image(to_integer(unsigned(RAM(1400)))) severity failure;
+        assert RAM(1401) = "00100101" report "UNSUCCESSFUL TEST: # 401 byte in RAM -> add: 1401; right value: 00100101; found value: " & integer'image(to_integer(unsigned(RAM(1401)))) severity failure;
+        assert RAM(1402) = "01101111" report "UNSUCCESSFUL TEST: # 402 byte in RAM -> add: 1402; right value: 01101111; found value: " & integer'image(to_integer(unsigned(RAM(1402)))) severity failure;
+        assert RAM(1403) = "10100001" report "UNSUCCESSFUL TEST: # 403 byte in RAM -> add: 1403; right value: 10100001; found value: " & integer'image(to_integer(unsigned(RAM(1403)))) severity failure;
+        assert RAM(1404) = "00011111" report "UNSUCCESSFUL TEST: # 404 byte in RAM -> add: 1404; right value: 00011111; found value: " & integer'image(to_integer(unsigned(RAM(1404)))) severity failure;
+        assert RAM(1405) = "01001010" report "UNSUCCESSFUL TEST: # 405 byte in RAM -> add: 1405; right value: 01001010; found value: " & integer'image(to_integer(unsigned(RAM(1405)))) severity failure;
+        assert RAM(1406) = "11111001" report "UNSUCCESSFUL TEST: # 406 byte in RAM -> add: 1406; right value: 11111001; found value: " & integer'image(to_integer(unsigned(RAM(1406)))) severity failure;
+        assert RAM(1407) = "01011011" report "UNSUCCESSFUL TEST: # 407 byte in RAM -> add: 1407; right value: 01011011; found value: " & integer'image(to_integer(unsigned(RAM(1407)))) severity failure;
+        assert RAM(1408) = "11010001" report "UNSUCCESSFUL TEST: # 408 byte in RAM -> add: 1408; right value: 11010001; found value: " & integer'image(to_integer(unsigned(RAM(1408)))) severity failure;
+        assert RAM(1409) = "00101000" report "UNSUCCESSFUL TEST: # 409 byte in RAM -> add: 1409; right value: 00101000; found value: " & integer'image(to_integer(unsigned(RAM(1409)))) severity failure;
+        assert RAM(1410) = "10011000" report "UNSUCCESSFUL TEST: # 410 byte in RAM -> add: 1410; right value: 10011000; found value: " & integer'image(to_integer(unsigned(RAM(1410)))) severity failure;
+        assert RAM(1411) = "10100010" report "UNSUCCESSFUL TEST: # 411 byte in RAM -> add: 1411; right value: 10100010; found value: " & integer'image(to_integer(unsigned(RAM(1411)))) severity failure;
+        assert RAM(1412) = "01010101" report "UNSUCCESSFUL TEST: # 412 byte in RAM -> add: 1412; right value: 01010101; found value: " & integer'image(to_integer(unsigned(RAM(1412)))) severity failure;
+        assert RAM(1413) = "10000111" report "UNSUCCESSFUL TEST: # 413 byte in RAM -> add: 1413; right value: 10000111; found value: " & integer'image(to_integer(unsigned(RAM(1413)))) severity failure;
+        assert RAM(1414) = "11101011" report "UNSUCCESSFUL TEST: # 414 byte in RAM -> add: 1414; right value: 11101011; found value: " & integer'image(to_integer(unsigned(RAM(1414)))) severity failure;
+        assert RAM(1415) = "00000000" report "UNSUCCESSFUL TEST: # 415 byte in RAM -> add: 1415; right value: 00000000; found value: " & integer'image(to_integer(unsigned(RAM(1415)))) severity failure;
+        assert RAM(1416) = "00110111" report "UNSUCCESSFUL TEST: # 416 byte in RAM -> add: 1416; right value: 00110111; found value: " & integer'image(to_integer(unsigned(RAM(1416)))) severity failure;
+        assert RAM(1417) = "00001110" report "UNSUCCESSFUL TEST: # 417 byte in RAM -> add: 1417; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1417)))) severity failure;
+        assert RAM(1418) = "10000100" report "UNSUCCESSFUL TEST: # 418 byte in RAM -> add: 1418; right value: 10000100; found value: " & integer'image(to_integer(unsigned(RAM(1418)))) severity failure;
+        assert RAM(1419) = "10011011" report "UNSUCCESSFUL TEST: # 419 byte in RAM -> add: 1419; right value: 10011011; found value: " & integer'image(to_integer(unsigned(RAM(1419)))) severity failure;
+        assert RAM(1420) = "00001110" report "UNSUCCESSFUL TEST: # 420 byte in RAM -> add: 1420; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1420)))) severity failure;
+        assert RAM(1421) = "10000111" report "UNSUCCESSFUL TEST: # 421 byte in RAM -> add: 1421; right value: 10000111; found value: " & integer'image(to_integer(unsigned(RAM(1421)))) severity failure;
+        assert RAM(1422) = "00000011" report "UNSUCCESSFUL TEST: # 422 byte in RAM -> add: 1422; right value: 00000011; found value: " & integer'image(to_integer(unsigned(RAM(1422)))) severity failure;
+        assert RAM(1423) = "01111101" report "UNSUCCESSFUL TEST: # 423 byte in RAM -> add: 1423; right value: 01111101; found value: " & integer'image(to_integer(unsigned(RAM(1423)))) severity failure;
+        assert RAM(1424) = "00011100" report "UNSUCCESSFUL TEST: # 424 byte in RAM -> add: 1424; right value: 00011100; found value: " & integer'image(to_integer(unsigned(RAM(1424)))) severity failure;
+        assert RAM(1425) = "00110100" report "UNSUCCESSFUL TEST: # 425 byte in RAM -> add: 1425; right value: 00110100; found value: " & integer'image(to_integer(unsigned(RAM(1425)))) severity failure;
+        assert RAM(1426) = "10010101" report "UNSUCCESSFUL TEST: # 426 byte in RAM -> add: 1426; right value: 10010101; found value: " & integer'image(to_integer(unsigned(RAM(1426)))) severity failure;
+        assert RAM(1427) = "10000111" report "UNSUCCESSFUL TEST: # 427 byte in RAM -> add: 1427; right value: 10000111; found value: " & integer'image(to_integer(unsigned(RAM(1427)))) severity failure;
+        assert RAM(1428) = "00001110" report "UNSUCCESSFUL TEST: # 428 byte in RAM -> add: 1428; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1428)))) severity failure;
+        assert RAM(1429) = "01100010" report "UNSUCCESSFUL TEST: # 429 byte in RAM -> add: 1429; right value: 01100010; found value: " & integer'image(to_integer(unsigned(RAM(1429)))) severity failure;
+        assert RAM(1430) = "01011000" report "UNSUCCESSFUL TEST: # 430 byte in RAM -> add: 1430; right value: 01011000; found value: " & integer'image(to_integer(unsigned(RAM(1430)))) severity failure;
+        assert RAM(1431) = "01110011" report "UNSUCCESSFUL TEST: # 431 byte in RAM -> add: 1431; right value: 01110011; found value: " & integer'image(to_integer(unsigned(RAM(1431)))) severity failure;
+        assert RAM(1432) = "10100001" report "UNSUCCESSFUL TEST: # 432 byte in RAM -> add: 1432; right value: 10100001; found value: " & integer'image(to_integer(unsigned(RAM(1432)))) severity failure;
+        assert RAM(1433) = "11001110" report "UNSUCCESSFUL TEST: # 433 byte in RAM -> add: 1433; right value: 11001110; found value: " & integer'image(to_integer(unsigned(RAM(1433)))) severity failure;
+        assert RAM(1434) = "10001001" report "UNSUCCESSFUL TEST: # 434 byte in RAM -> add: 1434; right value: 10001001; found value: " & integer'image(to_integer(unsigned(RAM(1434)))) severity failure;
+        assert RAM(1435) = "01010110" report "UNSUCCESSFUL TEST: # 435 byte in RAM -> add: 1435; right value: 01010110; found value: " & integer'image(to_integer(unsigned(RAM(1435)))) severity failure;
+        assert RAM(1436) = "00101000" report "UNSUCCESSFUL TEST: # 436 byte in RAM -> add: 1436; right value: 00101000; found value: " & integer'image(to_integer(unsigned(RAM(1436)))) severity failure;
+        assert RAM(1437) = "10011000" report "UNSUCCESSFUL TEST: # 437 byte in RAM -> add: 1437; right value: 10011000; found value: " & integer'image(to_integer(unsigned(RAM(1437)))) severity failure;
+        assert RAM(1438) = "01000100" report "UNSUCCESSFUL TEST: # 438 byte in RAM -> add: 1438; right value: 01000100; found value: " & integer'image(to_integer(unsigned(RAM(1438)))) severity failure;
+        assert RAM(1439) = "01000100" report "UNSUCCESSFUL TEST: # 439 byte in RAM -> add: 1439; right value: 01000100; found value: " & integer'image(to_integer(unsigned(RAM(1439)))) severity failure;
+        assert RAM(1440) = "10100001" report "UNSUCCESSFUL TEST: # 440 byte in RAM -> add: 1440; right value: 10100001; found value: " & integer'image(to_integer(unsigned(RAM(1440)))) severity failure;
+        assert RAM(1441) = "11111001" report "UNSUCCESSFUL TEST: # 441 byte in RAM -> add: 1441; right value: 11111001; found value: " & integer'image(to_integer(unsigned(RAM(1441)))) severity failure;
+        assert RAM(1442) = "10001001" report "UNSUCCESSFUL TEST: # 442 byte in RAM -> add: 1442; right value: 10001001; found value: " & integer'image(to_integer(unsigned(RAM(1442)))) severity failure;
+        assert RAM(1443) = "01101100" report "UNSUCCESSFUL TEST: # 443 byte in RAM -> add: 1443; right value: 01101100; found value: " & integer'image(to_integer(unsigned(RAM(1443)))) severity failure;
+        assert RAM(1444) = "11100110" report "UNSUCCESSFUL TEST: # 444 byte in RAM -> add: 1444; right value: 11100110; found value: " & integer'image(to_integer(unsigned(RAM(1444)))) severity failure;
+        assert RAM(1445) = "00011111" report "UNSUCCESSFUL TEST: # 445 byte in RAM -> add: 1445; right value: 00011111; found value: " & integer'image(to_integer(unsigned(RAM(1445)))) severity failure;
+        assert RAM(1446) = "01111110" report "UNSUCCESSFUL TEST: # 446 byte in RAM -> add: 1446; right value: 01111110; found value: " & integer'image(to_integer(unsigned(RAM(1446)))) severity failure;
+        assert RAM(1447) = "10111110" report "UNSUCCESSFUL TEST: # 447 byte in RAM -> add: 1447; right value: 10111110; found value: " & integer'image(to_integer(unsigned(RAM(1447)))) severity failure;
+        assert RAM(1448) = "01010110" report "UNSUCCESSFUL TEST: # 448 byte in RAM -> add: 1448; right value: 01010110; found value: " & integer'image(to_integer(unsigned(RAM(1448)))) severity failure;
+        assert RAM(1449) = "00010010" report "UNSUCCESSFUL TEST: # 449 byte in RAM -> add: 1449; right value: 00010010; found value: " & integer'image(to_integer(unsigned(RAM(1449)))) severity failure;
+        assert RAM(1450) = "01101111" report "UNSUCCESSFUL TEST: # 450 byte in RAM -> add: 1450; right value: 01101111; found value: " & integer'image(to_integer(unsigned(RAM(1450)))) severity failure;
+        assert RAM(1451) = "01111101" report "UNSUCCESSFUL TEST: # 451 byte in RAM -> add: 1451; right value: 01111101; found value: " & integer'image(to_integer(unsigned(RAM(1451)))) severity failure;
+        assert RAM(1452) = "00100110" report "UNSUCCESSFUL TEST: # 452 byte in RAM -> add: 1452; right value: 00100110; found value: " & integer'image(to_integer(unsigned(RAM(1452)))) severity failure;
+        assert RAM(1453) = "11110100" report "UNSUCCESSFUL TEST: # 453 byte in RAM -> add: 1453; right value: 11110100; found value: " & integer'image(to_integer(unsigned(RAM(1453)))) severity failure;
+        assert RAM(1454) = "01110011" report "UNSUCCESSFUL TEST: # 454 byte in RAM -> add: 1454; right value: 01110011; found value: " & integer'image(to_integer(unsigned(RAM(1454)))) severity failure;
+        assert RAM(1455) = "01001001" report "UNSUCCESSFUL TEST: # 455 byte in RAM -> add: 1455; right value: 01001001; found value: " & integer'image(to_integer(unsigned(RAM(1455)))) severity failure;
+        assert RAM(1456) = "10110000" report "UNSUCCESSFUL TEST: # 456 byte in RAM -> add: 1456; right value: 10110000; found value: " & integer'image(to_integer(unsigned(RAM(1456)))) severity failure;
+        assert RAM(1457) = "11101000" report "UNSUCCESSFUL TEST: # 457 byte in RAM -> add: 1457; right value: 11101000; found value: " & integer'image(to_integer(unsigned(RAM(1457)))) severity failure;
+        assert RAM(1458) = "01001001" report "UNSUCCESSFUL TEST: # 458 byte in RAM -> add: 1458; right value: 01001001; found value: " & integer'image(to_integer(unsigned(RAM(1458)))) severity failure;
+        assert RAM(1459) = "10111110" report "UNSUCCESSFUL TEST: # 459 byte in RAM -> add: 1459; right value: 10111110; found value: " & integer'image(to_integer(unsigned(RAM(1459)))) severity failure;
+        assert RAM(1460) = "01011000" report "UNSUCCESSFUL TEST: # 460 byte in RAM -> add: 1460; right value: 01011000; found value: " & integer'image(to_integer(unsigned(RAM(1460)))) severity failure;
+        assert RAM(1461) = "10100001" report "UNSUCCESSFUL TEST: # 461 byte in RAM -> add: 1461; right value: 10100001; found value: " & integer'image(to_integer(unsigned(RAM(1461)))) severity failure;
+        assert RAM(1462) = "00010001" report "UNSUCCESSFUL TEST: # 462 byte in RAM -> add: 1462; right value: 00010001; found value: " & integer'image(to_integer(unsigned(RAM(1462)))) severity failure;
+        assert RAM(1463) = "00100110" report "UNSUCCESSFUL TEST: # 463 byte in RAM -> add: 1463; right value: 00100110; found value: " & integer'image(to_integer(unsigned(RAM(1463)))) severity failure;
+        assert RAM(1464) = "11001101" report "UNSUCCESSFUL TEST: # 464 byte in RAM -> add: 1464; right value: 11001101; found value: " & integer'image(to_integer(unsigned(RAM(1464)))) severity failure;
+        assert RAM(1465) = "11110111" report "UNSUCCESSFUL TEST: # 465 byte in RAM -> add: 1465; right value: 11110111; found value: " & integer'image(to_integer(unsigned(RAM(1465)))) severity failure;
+        assert RAM(1466) = "00001110" report "UNSUCCESSFUL TEST: # 466 byte in RAM -> add: 1466; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1466)))) severity failure;
+        assert RAM(1467) = "01100001" report "UNSUCCESSFUL TEST: # 467 byte in RAM -> add: 1467; right value: 01100001; found value: " & integer'image(to_integer(unsigned(RAM(1467)))) severity failure;
+        assert RAM(1468) = "00101000" report "UNSUCCESSFUL TEST: # 468 byte in RAM -> add: 1468; right value: 00101000; found value: " & integer'image(to_integer(unsigned(RAM(1468)))) severity failure;
+        assert RAM(1469) = "10010110" report "UNSUCCESSFUL TEST: # 469 byte in RAM -> add: 1469; right value: 10010110; found value: " & integer'image(to_integer(unsigned(RAM(1469)))) severity failure;
+        assert RAM(1470) = "00011100" report "UNSUCCESSFUL TEST: # 470 byte in RAM -> add: 1470; right value: 00011100; found value: " & integer'image(to_integer(unsigned(RAM(1470)))) severity failure;
+        assert RAM(1471) = "00001110" report "UNSUCCESSFUL TEST: # 471 byte in RAM -> add: 1471; right value: 00001110; found value: " & integer'image(to_integer(unsigned(RAM(1471)))) severity failure;
+        assert RAM(1472) = "10110000" report "UNSUCCESSFUL TEST: # 472 byte in RAM -> add: 1472; right value: 10110000; found value: " & integer'image(to_integer(unsigned(RAM(1472)))) severity failure;
+        assert RAM(1473) = "11101000" report "UNSUCCESSFUL TEST: # 473 byte in RAM -> add: 1473; right value: 11101000; found value: " & integer'image(to_integer(unsigned(RAM(1473)))) severity failure;
+        assert RAM(1474) = "10101100" report "UNSUCCESSFUL TEST: # 474 byte in RAM -> add: 1474; right value: 10101100; found value: " & integer'image(to_integer(unsigned(RAM(1474)))) severity failure;
+        assert RAM(1475) = "11010001" report "UNSUCCESSFUL TEST: # 475 byte in RAM -> add: 1475; right value: 11010001; found value: " & integer'image(to_integer(unsigned(RAM(1475)))) severity failure;
+        assert RAM(1476) = "00011111" report "UNSUCCESSFUL TEST: # 476 byte in RAM -> add: 1476; right value: 00011111; found value: " & integer'image(to_integer(unsigned(RAM(1476)))) severity failure;
+        assert RAM(1477) = "10011000" report "UNSUCCESSFUL TEST: # 477 byte in RAM -> add: 1477; right value: 10011000; found value: " & integer'image(to_integer(unsigned(RAM(1477)))) severity failure;
+        assert RAM(1478) = "10011011" report "UNSUCCESSFUL TEST: # 478 byte in RAM -> add: 1478; right value: 10011011; found value: " & integer'image(to_integer(unsigned(RAM(1478)))) severity failure;
+        assert RAM(1479) = "00000000" report "UNSUCCESSFUL TEST: # 479 byte in RAM -> add: 1479; right value: 00000000; found value: " & integer'image(to_integer(unsigned(RAM(1479)))) severity failure;
+        assert RAM(1480) = "00111001" report "UNSUCCESSFUL TEST: # 480 byte in RAM -> add: 1480; right value: 00111001; found value: " & integer'image(to_integer(unsigned(RAM(1480)))) severity failure;
+        assert RAM(1481) = "01100010" report "UNSUCCESSFUL TEST: # 481 byte in RAM -> add: 1481; right value: 01100010; found value: " & integer'image(to_integer(unsigned(RAM(1481)))) severity failure;
+        assert RAM(1482) = "01100010" report "UNSUCCESSFUL TEST: # 482 byte in RAM -> add: 1482; right value: 01100010; found value: " & integer'image(to_integer(unsigned(RAM(1482)))) severity failure;
+        assert RAM(1483) = "01101100" report "UNSUCCESSFUL TEST: # 483 byte in RAM -> add: 1483; right value: 01101100; found value: " & integer'image(to_integer(unsigned(RAM(1483)))) severity failure;
+        assert RAM(1484) = "00001101" report "UNSUCCESSFUL TEST: # 484 byte in RAM -> add: 1484; right value: 00001101; found value: " & integer'image(to_integer(unsigned(RAM(1484)))) severity failure;
+        assert RAM(1485) = "11000000" report "UNSUCCESSFUL TEST: # 485 byte in RAM -> add: 1485; right value: 11000000; found value: " & integer'image(to_integer(unsigned(RAM(1485)))) severity failure;
+        assert RAM(1486) = "11100101" report "UNSUCCESSFUL TEST: # 486 byte in RAM -> add: 1486; right value: 11100101; found value: " & integer'image(to_integer(unsigned(RAM(1486)))) severity failure;
+        assert RAM(1487) = "10110011" report "UNSUCCESSFUL TEST: # 487 byte in RAM -> add: 1487; right value: 10110011; found value: " & integer'image(to_integer(unsigned(RAM(1487)))) severity failure;
+        assert RAM(1488) = "01000111" report "UNSUCCESSFUL TEST: # 488 byte in RAM -> add: 1488; right value: 01000111; found value: " & integer'image(to_integer(unsigned(RAM(1488)))) severity failure;
+        assert RAM(1489) = "00000011" report "UNSUCCESSFUL TEST: # 489 byte in RAM -> add: 1489; right value: 00000011; found value: " & integer'image(to_integer(unsigned(RAM(1489)))) severity failure;
+        assert RAM(1490) = "10011000" report "UNSUCCESSFUL TEST: # 490 byte in RAM -> add: 1490; right value: 10011000; found value: " & integer'image(to_integer(unsigned(RAM(1490)))) severity failure;
+        assert RAM(1491) = "10101111" report "UNSUCCESSFUL TEST: # 491 byte in RAM -> add: 1491; right value: 10101111; found value: " & integer'image(to_integer(unsigned(RAM(1491)))) severity failure;
+        assert RAM(1492) = "01110000" report "UNSUCCESSFUL TEST: # 492 byte in RAM -> add: 1492; right value: 01110000; found value: " & integer'image(to_integer(unsigned(RAM(1492)))) severity failure;
+        assert RAM(1493) = "11011111" report "UNSUCCESSFUL TEST: # 493 byte in RAM -> add: 1493; right value: 11011111; found value: " & integer'image(to_integer(unsigned(RAM(1493)))) severity failure;
+        assert RAM(1494) = "01001010" report "UNSUCCESSFUL TEST: # 494 byte in RAM -> add: 1494; right value: 01001010; found value: " & integer'image(to_integer(unsigned(RAM(1494)))) severity failure;
+        assert RAM(1495) = "11110100" report "UNSUCCESSFUL TEST: # 495 byte in RAM -> add: 1495; right value: 11110100; found value: " & integer'image(to_integer(unsigned(RAM(1495)))) severity failure;
+        assert RAM(1496) = "10010110" report "UNSUCCESSFUL TEST: # 496 byte in RAM -> add: 1496; right value: 10010110; found value: " & integer'image(to_integer(unsigned(RAM(1496)))) severity failure;
+        assert RAM(1497) = "00011100" report "UNSUCCESSFUL TEST: # 497 byte in RAM -> add: 1497; right value: 00011100; found value: " & integer'image(to_integer(unsigned(RAM(1497)))) severity failure;
+        assert RAM(1498) = "00111001" report "UNSUCCESSFUL TEST: # 498 byte in RAM -> add: 1498; right value: 00111001; found value: " & integer'image(to_integer(unsigned(RAM(1498)))) severity failure;
+        assert RAM(1499) = "01101100" report "UNSUCCESSFUL TEST: # 499 byte in RAM -> add: 1499; right value: 01101100; found value: " & integer'image(to_integer(unsigned(RAM(1499)))) severity failure;
+        assert RAM(1500) = "11101011" report "UNSUCCESSFUL TEST: # 500 byte in RAM -> add: 1500; right value: 11101011; found value: " & integer'image(to_integer(unsigned(RAM(1500)))) severity failure;
+        assert RAM(1501) = "00001101" report "UNSUCCESSFUL TEST: # 501 byte in RAM -> add: 1501; right value: 00001101; found value: " & integer'image(to_integer(unsigned(RAM(1501)))) severity failure;
+        assert RAM(1502) = "11001101" report "UNSUCCESSFUL TEST: # 502 byte in RAM -> add: 1502; right value: 11001101; found value: " & integer'image(to_integer(unsigned(RAM(1502)))) severity failure;
+        assert RAM(1503) = "11001110" report "UNSUCCESSFUL TEST: # 503 byte in RAM -> add: 1503; right value: 11001110; found value: " & integer'image(to_integer(unsigned(RAM(1503)))) severity failure;
+        assert RAM(1504) = "01011000" report "UNSUCCESSFUL TEST: # 504 byte in RAM -> add: 1504; right value: 01011000; found value: " & integer'image(to_integer(unsigned(RAM(1504)))) severity failure;
+        assert RAM(1505) = "10010101" report "UNSUCCESSFUL TEST: # 505 byte in RAM -> add: 1505; right value: 10010101; found value: " & integer'image(to_integer(unsigned(RAM(1505)))) severity failure;
+        assert RAM(1506) = "10001010" report "UNSUCCESSFUL TEST: # 506 byte in RAM -> add: 1506; right value: 10001010; found value: " & integer'image(to_integer(unsigned(RAM(1506)))) severity failure;
+        assert RAM(1507) = "11111001" report "UNSUCCESSFUL TEST: # 507 byte in RAM -> add: 1507; right value: 11111001; found value: " & integer'image(to_integer(unsigned(RAM(1507)))) severity failure;
+        assert RAM(1508) = "01010110" report "UNSUCCESSFUL TEST: # 508 byte in RAM -> add: 1508; right value: 01010110; found value: " & integer'image(to_integer(unsigned(RAM(1508)))) severity failure;
+        assert RAM(1509) = "11000000" report "UNSUCCESSFUL TEST: # 509 byte in RAM -> add: 1509; right value: 11000000; found value: " & integer'image(to_integer(unsigned(RAM(1509)))) severity failure;
+
+        assert false report "SUCCESSFUL TEST: Simulation Ended!" severity failure;
+    end process test;
+end projecttb;
